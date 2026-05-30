@@ -49,7 +49,10 @@ public class JwtFilter extends OncePerRequestFilter {
 
                 String email = claims.getSubject(); // המייל של המשתמש
                 String role = claims.get("role", String.class); // תפקיד המשתמש
-
+                if (role != null && !role.startsWith("ROLE_")) {
+                    role = "ROLE_" + role;
+                }
+                
                 // 🔹 6. יוצרים הרשאות עבור Spring Security
                 List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority(role));
 

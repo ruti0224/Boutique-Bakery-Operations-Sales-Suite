@@ -66,18 +66,38 @@ public class ClientService {
         // 3. מייצרים ומחזירים את הטוקן
         return jwtUtil.generateToken(user.getEmail(), user.getRole(), user.getCode());
     }
-    public void updateUser(int id,Users u1) {
+    public Users getUserById(int id) {
+        Users user = usersRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        String currentUserEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+        if (!user.getEmail().equals(currentUserEmail)) {
+            throw new RuntimeException("אבטחה: אין לך הרשאה לצפות בפרטים של משתמש אחר!");
+        }
+        return user;
+    }
+    public void updateUser(int id, Users u1) {
         Users user = usersRepo.findById(id)
                 .orElseThrow(() -> new RuntimeException("id not exist"));
         String currentUserEmail = SecurityContextHolder.getContext().getAuthentication().getName();
         if (!user.getEmail().equals(currentUserEmail)) {
             throw new RuntimeException("אבטחה: אין לך הרשאה לעדכן פרטים של משתמש אחר!");
         }
+
+        // עדכון פרטים רגילים
         user.setName(u1.getName());
         user.setEmail(u1.getEmail());
         user.setPhoneNumber(u1.getPhoneNumber());
-        user.setPassword(u1.getPassword());
-        user.setRole(u1.getRole());
+
+        // הגנה על הסיסמה - מעדכנים ומצפינים רק אם נשלחה סיסמה חדשה
+        if (u1.getPassword() != null && !u1.getPassword().trim().isEmpty()) {
+            user.setPassword(passwordEncoder.encode(u1.getPassword()));
+        }
+        // בדרך כלל לא נרצה שמשתמש יוכל לשנות לעצמו את ה-Role דרך הפרופיל,
+        // אבל אם זה נדרש אצלך, אפשר להשאיר את זה:
+        if (u1.getRole() != null) {
+            user.setRole(u1.getRole());
+        }
+
         usersRepo.save(user);
     }
     public List<OrderItem> getCart(int id) {
@@ -101,22 +121,27 @@ public class ClientService {
         cakeRepo.save(cake);
         return cake.getRecommendation();
     }
-    // בקובץ ה-Service שלך
     public List<OrderItem> addToCart(Cakes cakeFromClient, int userId) {
         // 1. מציאת המשתמש ב-DB
         Users user = usersRepo.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // 2. מציאת העוגה ה"אמיתית" ב-DB (מונע את בעיית ה-Detached Entity)
+        // 2. בדיקת אבטחה קריטית! האם המשתמש המחובר הוא באמת בעל העגלה?
+        String currentUserEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+        if (!user.getEmail().equals(currentUserEmail)) {
+            throw new RuntimeException("אבטחה: אין לך הרשאה להוסיף מוצרים לעגלה של משתמש אחר!");
+        }
+
+        // 3. מציאת העוגה ה"אמיתית" מהמסד כדי לוודא נתונים עדכניים ומניעת אובייקט מנותק
         Cakes realCake = cakeRepo.findById(cakeFromClient.getId())
                 .orElseThrow(() -> new RuntimeException("Cake not found"));
 
-        // 3. יצירת רשימה חדשה אם העגלה ריקה (מונע NullPointerException)
+        // 4. אתחול הרשימה אם היא ריקה (מונע קריסה במשתמשים חדשים)
         if (user.getCakesInCart() == null) {
             user.setCakesInCart(new ArrayList<>());
         }
 
-        // 4. בדיקה האם העוגה כבר קיימת בעגלה - אם כן, רק מעדכנים כמות
+        // 5. בדיקה האם העוגה כבר קיימת בעגלה - אם כן, רק מגדילים כמות
         OrderItem existingItem = user.getCakesInCart().stream()
                 .filter(item -> item.getCake().getId() == realCake.getId())
                 .findFirst()
@@ -125,13 +150,16 @@ public class ClientService {
         if (existingItem != null) {
             existingItem.setQuantity(existingItem.getQuantity() + 1);
         } else {
-            // 5. אם היא לא קיימת - יצירת פריט חדש
+            // 6. העוגה לא בעגלה - יוצרים פריט חדש
             OrderItem newItem = new OrderItem();
             newItem.setCake(realCake);
             newItem.setQuantity(1);
             user.getCakesInCart().add(newItem);
         }
+
+        // עכשיו, בזכות ה-Cascade, הפקודה הזו גם תשמור את הפריט החדש!
         usersRepo.save(user);
+
         return user.getCakesInCart();
     }
     public List<OrderItem> removeFromCart(int cakeId, int userId) {
@@ -156,20 +184,59 @@ public class ClientService {
 
         return user.getCakesInCart();
     }
-    public void addOrder(Orders o) {
+    public Orders addOrder(Orders o) {
         if (o.getNotes() != null) {
             o.setNotes(HtmlUtils.htmlEscape(o.getNotes()));
         }
-        if(o.getStatus()!=PAID){
+        if(o.getStatus() != PAID){
             throw new RuntimeException("you didn't pay");
         }
-        if (orderRepo.existsById(o.getOrderCode()))
-            throw new RuntimeException("id exist");
-        Users user = o.getUser();
-        user.getUserOrders().add(o);
-        user.getCakesInCart().clear();
+
+        // 1. שליפת המשתמש האמיתי והמלא ממסד הנתונים (מונע שגיאות Null ומחיקת נתונים)
+        Users realUser = usersRepo.findById(o.getUser().getCode())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // 2. בדיקת אבטחה - האם המשתמש מבצע הזמנה עבור עצמו?
+        String currentUserEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+        if (!realUser.getEmail().equals(currentUserEmail)) {
+            throw new RuntimeException("אבטחה: אינך מורשה לבצע הזמנה עבור משתמש אחר");
+        }
+
+        // 3. משיכת הפריטים ישירות מעגלת המשתמש (במקום לסמוך על הדפדפן)
+        List<OrderItem> cartItems = realUser.getCakesInCart();
+        if (cartItems == null || cartItems.isEmpty()) {
+            throw new RuntimeException("העגלה ריקה");
+        }
+
+        // 4. חישוב המחיר הכולל בשרת (חוסם אפשרות לזיוף מחיר דרך ה-Frontend)
+        double realTotal = 0;
+        List<OrderItem> orderItems = new ArrayList<>();
+
+        for (OrderItem item : cartItems) {
+            realTotal += (item.getCake().getPrice() * item.getQuantity());
+
+            // אנחנו משכפלים את הפריטים כדי שנוכל לנקות את העגלה בבטחה
+            // מבלי למחוק את הפריטים מההזמנה בגלל מנגנון ה-orphanRemoval
+            OrderItem newOrderItem = new OrderItem();
+            newOrderItem.setCake(item.getCake());
+            newOrderItem.setQuantity(item.getQuantity());
+            orderItems.add(newOrderItem);
+        }
+
+        o.setTotalPrice(realTotal);
+        o.setCakes(orderItems);
+        o.setUser(realUser);
+
+        // 5. הוספת ההזמנה למשתמש וניקוי העגלה
+        if (realUser.getUserOrders() == null) {
+            realUser.setUserOrders(new ArrayList<>());
+        }
+        realUser.getUserOrders().add(o);
+        realUser.getCakesInCart().clear();
         orderRepo.save(o);
-        usersRepo.save(user);
+        usersRepo.save(realUser);
+
+        return o;
     }
     public Optional<Orders> getOrdersById(int userId) {
         if (!usersRepo.existsById(userId))

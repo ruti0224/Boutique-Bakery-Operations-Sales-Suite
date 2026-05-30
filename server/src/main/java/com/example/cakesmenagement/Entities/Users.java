@@ -33,8 +33,8 @@ public class Users {
     @Size(min = 6, message = "סיסמה חייבת להכיל לפחות 6 תווים")
     private String password;
     private String role;
-    @OneToMany
-    @JoinColumn
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "cakes_in_cart_code")
     private List<OrderItem> cakesInCart;
     @OneToMany
     @JoinColumn

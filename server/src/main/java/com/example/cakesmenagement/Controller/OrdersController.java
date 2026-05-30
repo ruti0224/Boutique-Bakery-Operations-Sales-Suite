@@ -23,10 +23,9 @@ public class OrdersController {
     private AdminService adminService;
 
     @PostMapping("/add")
-    public void addOrder(@Valid  @RequestBody Orders order) {
-        clientService.addOrder(order);
+    public Orders addOrder(@Valid @RequestBody Orders order) {
+        return clientService.addOrder(order);
     }
-
     @GetMapping("/{id}")
     public Optional<Orders> getById(@PathVariable int id) {
         return clientService.getOrdersById(id);

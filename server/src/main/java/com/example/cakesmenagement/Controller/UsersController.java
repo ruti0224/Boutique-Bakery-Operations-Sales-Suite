@@ -29,7 +29,10 @@ public class UsersController {
     public List<OrderItem> getCart(@PathVariable int id) {
         return clientService.getCart(id);
     }
-
+    @GetMapping("/{id}")
+    public Users getUser(@PathVariable int id) {
+        return clientService.getUserById(id);
+    }
     @PostMapping("/{id}/cart/add")
     public List<OrderItem> addToCart(@PathVariable int id,@Valid @RequestBody Cakes cake) {
         return clientService.addToCart(cake, id);

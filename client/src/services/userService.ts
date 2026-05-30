@@ -3,6 +3,7 @@ import type { Cake, OrderItem, User } from "@/types";
 
 export const userService = {
   update: (id: number, user: Partial<User>) => api.put(`/api/users/${id}`, user).then((r) => r.data),
+  getById: (id: number) => api.get<User>(`/api/users/${id}`).then((r) => r.data),
   getCart: (id: number) => api.get<OrderItem[]>(`/api/users/${id}/cart`).then((r) => r.data),
   addToCart: (id: number, cake: Cake) =>
     api.post<OrderItem[]>(`/api/users/${id}/cart/add`, cake).then((r) => r.data),

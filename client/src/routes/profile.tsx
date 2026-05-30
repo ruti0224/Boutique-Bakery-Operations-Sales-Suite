@@ -35,9 +35,25 @@ function ProfilePage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!isAuthenticated) openAuth();
-    if (email) setForm((f) => ({ ...f, email }));
-  }, [isAuthenticated, openAuth, email]);
+    if (!isAuthenticated) {
+      openAuth();
+      return;
+    }
+    if (userId) {
+      setLoading(true);
+      userService.getById(userId)
+        .then((userData) => {
+          setForm({
+            name: userData.name || "",
+            email: userData.email || email || "",
+            phoneNumber: userData.phoneNumber || "",
+            password: "", // משאירים ריק כדי לא להציג את הסיסמה המוצפנת
+          });
+        })
+        .catch(() => toast.error("שגיאה בטעינת נתוני המשתמש"))
+        .finally(() => setLoading(false));
+    }
+  }, [isAuthenticated, openAuth, userId, email]);
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
@@ -50,16 +66,17 @@ function ProfilePage() {
       toast.error(parsed.error.issues[0].message);
       return;
     }
-    // Only send fields the user actually filled in
-    const payload: Record<string, unknown> = {};
-    if (parsed.data.name) payload.name = parsed.data.name;
-    if (parsed.data.email) payload.email = parsed.data.email;
-    if (parsed.data.phoneNumber) payload.phoneNumber = parsed.data.phoneNumber;
-    if (parsed.data.password) payload.password = parsed.data.password;
 
-    if (Object.keys(payload).length === 0) {
-      toast.error("יש למלא לפחות שדה אחד לעדכון");
-      return;
+    // מכינים את האובייקט לשליחה לשרת - שולחים הכל כדי לעבור ולידציה בשרת
+    const payload: Record<string, any> = {
+      name: parsed.data.name,
+      email: parsed.data.email,
+      phoneNumber: parsed.data.phoneNumber,
+    };
+
+    // מוסיפים את הסיסמה רק אם המשתמש באמת הקליד משהו (מונע שגיאת min=6 בשרת)
+    if (parsed.data.password && parsed.data.password.length >= 6) {
+      payload.password = parsed.data.password;
     }
 
     setLoading(true);
@@ -73,7 +90,6 @@ function ProfilePage() {
       setLoading(false);
     }
   };
-
   return (
     <PublicShell>
       <section className="container mx-auto px-4 py-12 max-w-xl">
