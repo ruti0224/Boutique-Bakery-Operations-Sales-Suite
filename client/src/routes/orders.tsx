@@ -9,7 +9,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { ChevronDown, MessageSquarePlus, Package } from "lucide-react";
 import { extractError } from "@/lib/api";
@@ -134,6 +134,7 @@ function OrdersPage() {
         <DialogContent dir="rtl">
           <DialogHeader>
             <DialogTitle>הוספת המלצה</DialogTitle>
+            <DialogDescription className="hidden">טופס להוספת המלצה לעוגה שנקנתה</DialogDescription>
           </DialogHeader>
           <Textarea
             value={recText}

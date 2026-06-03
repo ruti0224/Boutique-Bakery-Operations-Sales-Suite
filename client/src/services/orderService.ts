@@ -12,7 +12,7 @@ export const orderService = {
   update: (id: number, order: Partial<Order>) =>
     api.put(`/api/orders/admin/update/${id}`, order).then((r) => r.data),
   getByUser: (userId: number) =>
-    api.get<Order[]>(`/api/orders/admin/user/${userId}`).then((r) => r.data),
+    api.get<Order[]>(`/api/orders/user/${userId}`).then((r) => r.data),
   // Admin delete (if endpoint exists)
   remove: (id: number) => api.delete(`/api/orders/admin/${id}`).then((r) => r.data),
 };

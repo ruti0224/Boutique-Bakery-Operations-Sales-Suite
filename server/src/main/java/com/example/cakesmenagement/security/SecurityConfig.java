@@ -32,23 +32,21 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // ✅ מאפשר ל-Security להשתמש בהגדרות ה-CORS מ-CorsConfig
                 .cors(Customizer.withDefaults())
 
                 .csrf(csrf -> csrf.disable()) // ביטול CSRF
                 .authorizeHttpRequests(auth -> auth
 
-                        // --- התיקון שלנו: מאפשר גישה חופשית לנתיב הראשי ולדפי שגיאה שרת ---
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/", "/error", "/index.html").permitAll()
 
-                        // 1. קריאת נתונים (GET) - פתוח לכולם (גם אורחים)
                         .requestMatchers(HttpMethod.GET, "/api/categories/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/cakes/**").permitAll()
 
-                        // 2. התחברות והרשמה - פתוח לכולם
                         .requestMatchers("/api/users/register", "/auth/**").permitAll()
 
-                        // 3. הוספה/עריכה/מחיקה וגישת ניהול - רק למנהל (ADMIN)
+                        .requestMatchers(HttpMethod.POST, "/api/cakes/recommend").hasRole("USER")
+
                         .requestMatchers(HttpMethod.POST, "/api/categories/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/categories/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/categories/**").hasRole("ADMIN")
@@ -57,14 +55,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/api/cakes/**").hasRole("ADMIN")
                         .requestMatchers("/api/*/admin/**").hasRole("ADMIN")
 
-                        // 4. פעולות של לקוח מחובר (USER)
                         .requestMatchers(
                                 "/api/users/**",
-                                "/api/orders/add",
-                                "/api/cakes/recommend"
+                                "/api/orders/add"
                         ).hasRole("USER")
-
-                        // 5. כל נתיב אחר דורש התחברות בסיסית
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

@@ -37,16 +37,11 @@ public class AdminService {
     private PasswordEncoder passwordEncoder;
 
     public String loginAndGetToken(String email, String password) {
-        // 1. מחפשים משתמש
         Users user = usersRepo.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("משתמש לא קיים"));
-
-        // 2. בודקים סיסמה
         if (!passwordEncoder.matches(password, user.getPassword())) {
             throw new RuntimeException("סיסמה שגויה");
         }
-
-        // 3. מייצרים ומחזירים את הטוקן
         return jwtUtil.generateToken(user.getEmail(), user.getRole(), user.getCode());
     }
     public void deleteUser(int id) {
@@ -154,7 +149,6 @@ public class AdminService {
         cakesRepo.deleteById(id);
     }
 
-    // עדכון פרטי עוגה קיימת
     public Cakes updateCake(int id, Cakes updatedCake) {
         Cakes existingCake = cakesRepo.findById(id)
                 .orElseThrow(() -> new RuntimeException("עוגה לא נמצאה לעדכון"));
@@ -174,5 +168,20 @@ public class AdminService {
         }
         paymentsRepo.deleteById(id);
     }
-
+    /**
+     * פונקציה המקבלת סטטוס כמחרוזת, הופכת אותו ל-Enum של המערכת בצורה בטוחה,
+     * ומבצעת את עדכון ההזמנה במסד הנתונים.
+     */
+    public void updateOrderStatusWithStr(int id, String statusStr) {
+        Orders.OrderStatus enumStatus;
+        try {
+            if (statusStr == null) {
+                throw new IllegalArgumentException("הסטטוס לא יכול להיות ריק");
+            }
+            enumStatus = Orders.OrderStatus.valueOf(statusStr.toUpperCase().trim());
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException("שגיאה: סטטוס ההזמנה אינו תקין במערכת - " + statusStr);
+        }
+        updateOrderStatus(id, enumStatus);
+    }
 }
