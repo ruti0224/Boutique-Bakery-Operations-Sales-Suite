@@ -72,13 +72,11 @@ function HomePage() {
           </div>
           <div className="relative">
             <div className="absolute -inset-4 gradient-gold opacity-20 blur-3xl rounded-full" />
-            <img
-              src={heroImg}
-              alt="עוגות יוקרה"
-              width={1600}
-              height={900}
-              className="relative rounded-3xl shadow-elegant w-full object-cover aspect-[4/3]"
-            />
+            <img 
+  src="https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=1600&q=80" 
+  alt="Boutique Bakery" 
+  className="w-full h-full object-cover ..." 
+/>
           </div>
         </div>
       </section>
