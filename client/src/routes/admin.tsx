@@ -12,7 +12,6 @@ const NAV: { to: string; label: string; icon: any; exact?: boolean }[] = [
   { to: "/admin/cakes", label: "ניהול עוגות", icon: Cake },
   { to: "/admin/categories", label: "קטגוריות", icon: Folder },
   { to: "/admin/orders", label: "הזמנות", icon: ListOrdered },
-  { to: "/admin/payments", label: "תשלומים והכנסות", icon: ChartLine },
   { to: "/admin/users", label: "משתמשים", icon: Users },
 ];
 

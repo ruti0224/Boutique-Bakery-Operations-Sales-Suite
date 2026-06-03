@@ -188,35 +188,30 @@ public class ClientService {
         if (o.getNotes() != null) {
             o.setNotes(HtmlUtils.htmlEscape(o.getNotes()));
         }
-        if(o.getStatus() != PAID){
+
+        // מוודאים שמעבירים סטטוס (PAID נחשב 1 כברירת מחדל אצלנו עכשיו)
+        if(o.getStatus() == null){
             throw new RuntimeException("you didn't pay");
         }
 
-        // 1. שליפת המשתמש האמיתי והמלא ממסד הנתונים (מונע שגיאות Null ומחיקת נתונים)
-        Users realUser = usersRepo.findById(o.getUser().getCode())
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        // 2. בדיקת אבטחה - האם המשתמש מבצע הזמנה עבור עצמו?
+        // 1. שליפת המשתמש דרך ה-Security Context במקום לסמוך על הדפדפן! (זה הרבה יותר בטוח)
         String currentUserEmail = SecurityContextHolder.getContext().getAuthentication().getName();
-        if (!realUser.getEmail().equals(currentUserEmail)) {
-            throw new RuntimeException("אבטחה: אינך מורשה לבצע הזמנה עבור משתמש אחר");
-        }
+        Users realUser = usersRepo.findByEmail(currentUserEmail)
+                .orElseThrow(() -> new RuntimeException("אבטחה: משתמש לא מחובר או לא נמצא"));
 
-        // 3. משיכת הפריטים ישירות מעגלת המשתמש (במקום לסמוך על הדפדפן)
+        // 2. משיכת הפריטים ישירות מעגלת המשתמש
         List<OrderItem> cartItems = realUser.getCakesInCart();
         if (cartItems == null || cartItems.isEmpty()) {
             throw new RuntimeException("העגלה ריקה");
         }
 
-        // 4. חישוב המחיר הכולל בשרת (חוסם אפשרות לזיוף מחיר דרך ה-Frontend)
+        // 3. חישוב המחיר הכולל בשרת
         double realTotal = 0;
         List<OrderItem> orderItems = new ArrayList<>();
 
         for (OrderItem item : cartItems) {
             realTotal += (item.getCake().getPrice() * item.getQuantity());
 
-            // אנחנו משכפלים את הפריטים כדי שנוכל לנקות את העגלה בבטחה
-            // מבלי למחוק את הפריטים מההזמנה בגלל מנגנון ה-orphanRemoval
             OrderItem newOrderItem = new OrderItem();
             newOrderItem.setCake(item.getCake());
             newOrderItem.setQuantity(item.getQuantity());
@@ -227,12 +222,13 @@ public class ClientService {
         o.setCakes(orderItems);
         o.setUser(realUser);
 
-        // 5. הוספת ההזמנה למשתמש וניקוי העגלה
+        // 4. הוספת ההזמנה למשתמש וניקוי העגלה
         if (realUser.getUserOrders() == null) {
             realUser.setUserOrders(new ArrayList<>());
         }
         realUser.getUserOrders().add(o);
         realUser.getCakesInCart().clear();
+
         orderRepo.save(o);
         usersRepo.save(realUser);
 

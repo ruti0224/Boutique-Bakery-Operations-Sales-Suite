@@ -3,7 +3,7 @@ package com.example.cakesmenagement.security;
 import com.example.cakesmenagement.JWT.JwtFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod; // <--- ייבוא חשוב שהוספנו
+import org.springframework.http.HttpMethod;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.security.config.Customizer;
@@ -38,6 +38,9 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable()) // ביטול CSRF
                 .authorizeHttpRequests(auth -> auth
 
+                        // --- התיקון שלנו: מאפשר גישה חופשית לנתיב הראשי ולדפי שגיאה שרת ---
+                        .requestMatchers("/", "/error", "/index.html").permitAll()
+
                         // 1. קריאת נתונים (GET) - פתוח לכולם (גם אורחים)
                         .requestMatchers(HttpMethod.GET, "/api/categories/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/cakes/**").permitAll()
@@ -64,7 +67,6 @@ public class SecurityConfig {
                         // 5. כל נתיב אחר דורש התחברות בסיסית
                         .anyRequest().authenticated()
                 )
-                // הוספת מסנן ה-JWT לפני מסנן ההתחברות הרגיל
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

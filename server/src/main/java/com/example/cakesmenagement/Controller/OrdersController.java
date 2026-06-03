@@ -23,7 +23,7 @@ public class OrdersController {
     private AdminService adminService;
 
     @PostMapping("/add")
-    public Orders addOrder(@Valid @RequestBody Orders order) {
+    public Orders addOrder(@RequestBody Orders order) {
         return clientService.addOrder(order);
     }
     @GetMapping("/{id}")

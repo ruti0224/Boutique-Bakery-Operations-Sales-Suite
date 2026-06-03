@@ -1,13 +1,12 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { PublicShell } from "@/components/layout/PublicShell";
 import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Trash2, ShoppingBag } from "lucide-react";
+import { Trash2, ShoppingBag, Loader2 } from "lucide-react";
 import { orderService } from "@/services/orderService";
-import { paymentService } from "@/services/paymentService";
 import { extractError } from "@/lib/api";
 import { toast } from "sonner";
 
@@ -20,42 +19,43 @@ function CartPage() {
   const { isAuthenticated, openAuth, userId } = useAuth();
   const { items, total, remove, refresh, clear } = useCart();
   const navigate = useNavigate();
+  const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated) openAuth();
   }, [isAuthenticated, openAuth]);
 
-  const checkout = async (method: "PayPal" | "Google Pay") => {
-    if (!userId || items.length === 0) return;
-    try {
-      // Create order
-      const today = new Date().toISOString().slice(0, 10);
-      const delivery = new Date(Date.now() + 3 * 86400000).toISOString().slice(0, 10);
-      const order = await orderService.add({
-        user: { code: userId } as any,
-        orderDate: today,
-        deliveryDate: delivery,
-        totalPrice: total,
-        status: "PAID",
-        cakes: items as any,
-      });
-      const orderId = (order as any)?.orderCode ?? (order as any)?.id;
-      // Process payment
-      await paymentService.process({
-        order: orderId ? ({ orderCode: orderId } as any) : undefined,
-        amount: total,
-        paymentDate: new Date().toISOString(),
-        paymentMethod: method,
-        paymentStatus: "SUCCESS",
-        transactionId: `TX-${Date.now()}`,
-      });
-      toast.success(`התשלום ב-${method} התקבל בהצלחה`);
-      clear();
-      await refresh();
-      navigate({ to: "/orders" });
-    } catch (err) {
-      toast.error(extractError(err, "שגיאה בתשלום"));
+  const handleMockCheckout = async () => {
+    if (!userId || items.length === 0) {
+      toast.error("העגלה ריקה");
+      return;
     }
+
+    setIsProcessing(true); // מתחילים אנימציית טעינה
+
+    // הדמיה (Mock) של המתנה לאישור מחברת האשראי במשך שנייה וחצי
+    setTimeout(async () => {
+      try {
+        const today = new Date().toISOString().slice(0, 10);
+        // משלוח לעוד 3 ימים כברירת מחדל
+        const delivery = new Date(Date.now() + 3 * 86400000).toISOString().slice(0, 10);
+        await orderService.add({
+          orderDate: today,
+          deliveryDate: delivery,
+          status: "PAID",
+          notes: "הזמנה שולמה באשראי (הדגמת פרויקט)"
+        });
+
+        toast.success("התשלום עבר בהצלחה! ההזמנה בדרך אליך.");
+        clear(); // מרוקנים את העגלה בצד הלקוח
+        await refresh(); // מסנכרנים שוב מול השרת
+        navigate({ to: "/" }); // מעבירים את הלקוח לדף הבית בסיום
+      } catch (err) {
+        toast.error(extractError(err, "שגיאה ביצירת ההזמנה"));
+      } finally {
+        setIsProcessing(false);
+      }
+    }, 1000); 
   };
 
   return (
@@ -76,10 +76,12 @@ function CartPage() {
             {items.map((item) => (
               <Card key={item.code} className="p-4 flex items-center gap-4">
                 <img
-                  src={item.cake.imageUrl}
+                  src={item.cake.imageUrl || "https://placehold.co/100x100?text=No+Image"} 
                   alt={item.cake.name}
                   className="h-20 w-20 rounded-lg object-cover bg-muted"
-                  onError={(e) => ((e.currentTarget as HTMLImageElement).style.opacity = "0.3")}
+                  onError={(e) => {
+                    e.currentTarget.src = "https://placehold.co/100x100?text=No+Image";
+                  }}
                 />
                 <div className="flex-1 min-w-0">
                   <h3 className="font-semibold text-espresso truncate">{item.cake.name}</h3>
@@ -105,20 +107,22 @@ function CartPage() {
                 <span className="text-lg">סה״כ לתשלום</span>
                 <span className="text-3xl font-bold text-gradient-gold">₪{total.toFixed(2)}</span>
               </div>
-              <div className="grid sm:grid-cols-2 gap-3">
-                <Button
-                  onClick={() => checkout("PayPal")}
-                  className="bg-[#003087] hover:bg-[#003087]/90 text-white h-12"
-                >
-                  שלם עם PayPal
-                </Button>
-                <Button
-                  onClick={() => checkout("Google Pay")}
-                  className="bg-foreground hover:bg-foreground/90 text-background h-12"
-                >
-                  שלם עם Google Pay
-                </Button>
-              </div>
+              
+              <Button
+                onClick={handleMockCheckout}
+                disabled={isProcessing}
+                className="w-full bg-espresso hover:bg-espresso/90 text-white h-14 text-lg"
+              >
+                {isProcessing ? (
+                  <>
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                    מעבד תשלום מאובטח...
+                  </>
+                ) : (
+                  "לתשלום וסיום הזמנה"
+                )}
+              </Button>
+              
               <p className="text-xs text-muted-foreground mt-4 text-center">
                 הסליקה מתבצעת בצורה מאובטחת דרך ספק חיצוני
               </p>
