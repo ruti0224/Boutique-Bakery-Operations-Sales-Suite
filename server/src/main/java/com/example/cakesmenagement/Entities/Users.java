@@ -7,6 +7,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.*;
+
+import java.time.LocalDateTime;
 import java.util.List;
 
 
@@ -40,4 +42,10 @@ public class Users {
     @JoinColumn
     @JsonIgnore
     private List<Orders> userOrders;
+    private String resetToken;
+    private LocalDateTime resetTokenExpiry;
+
+    public void setEmail(String email) {
+        this.email = email != null ? email.toLowerCase() : null;
+    }
 }

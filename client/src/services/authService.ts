@@ -19,6 +19,14 @@ export const authService = {
     const res = await api.post("/auth/login", { email, password });
     return typeof res.data === "string" ? res.data : (res.data?.token ?? "");
   },
+  async forgotPassword(email: string): Promise<string> {
+    const res = await api.post("/auth/forgot-password", { email });
+    return res.data;
+  },
+  async resetPassword(token: string, newPassword: string): Promise<string> {
+    const res = await api.post("/auth/reset-password", { token, newPassword });
+    return res.data;
+  },
   async register(data: { name: string; email: string; password: string; phoneNumber: string }) {
     const res = await api.post("/auth/register", data);
     return res.data;

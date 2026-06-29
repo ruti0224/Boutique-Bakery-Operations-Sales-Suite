@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 import static com.example.cakesmenagement.Entities.Orders.OrderStatus.PAID;
 import static com.example.cakesmenagement.Entities.Payments.PaymentStatus.SUCCESS;
 
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = "http://localhost:8081")
 @Service
 @Transactional
 public class AdminService {
@@ -37,7 +37,7 @@ public class AdminService {
     private PasswordEncoder passwordEncoder;
 
     public String loginAndGetToken(String email, String password) {
-        Users user = usersRepo.findByEmail(email)
+        Users user = usersRepo.findByEmailIgnoreCase(email)
                 .orElseThrow(() -> new RuntimeException("משתמש לא קיים"));
         if (!passwordEncoder.matches(password, user.getPassword())) {
             throw new RuntimeException("סיסמה שגויה");

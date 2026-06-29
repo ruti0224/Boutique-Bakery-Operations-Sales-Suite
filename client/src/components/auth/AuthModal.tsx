@@ -11,6 +11,7 @@ import { useAuth } from "@/context/AuthContext";
 import { extractError } from "@/lib/api";
 import { useNavigate } from "@tanstack/react-router";
 import { z } from "zod";
+import { Link } from "@tanstack/react-router";
 
 const loginSchema = z.object({
   email: z.string().trim().email("אימייל לא תקין").max(255),
@@ -119,6 +120,12 @@ export function AuthModal() {
                 {loading && <Loader2 className="h-4 w-4 animate-spin" />}
                 התחברות
               </Button>
+             <Link 
+                  to="/forget-password" 
+                  className="text-sm text-blue-600 hover:underline mt-2 block"
+                  onClick={closeAuth}>
+                  שכחת סיסמה?
+              </Link>
             </form>
           </TabsContent>
           <TabsContent value="register">

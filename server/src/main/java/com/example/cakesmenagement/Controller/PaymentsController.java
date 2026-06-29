@@ -15,7 +15,6 @@ import java.util.Optional;
 
 @RestController // מגדיר את המחלקה כקונטרולר
 @RequestMapping("/api/payments") // הכתובת הבסיסית של כל הפעולות כאן
-@CrossOrigin
 public class PaymentsController {
     @Autowired
     private ClientService clientService;

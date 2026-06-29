@@ -14,12 +14,14 @@ import org.springframework.web.util.HtmlUtils;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static com.example.cakesmenagement.Entities.Orders.OrderStatus.PAID;
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = "http://localhost:8081")
 @Service
 @Transactional
 public class ClientService {
@@ -35,9 +37,11 @@ public class ClientService {
     private PaymentsRepo paymentsRepo;
     @Autowired
     private PasswordEncoder passwordEncoder;
+    @Autowired
+    private EmailService emailService;
 
     public Users register(RegisterRequest request) {
-        if (usersRepo.existsByEmail(request.getEmail())) {
+        if (usersRepo.existsByEmailIgnoreCase(request.getEmail())) {
             throw new RuntimeException("Email already exists");
         }
         Users u = new Users();
@@ -52,18 +56,12 @@ public class ClientService {
     private JwtUtil jwtUtil;
 
 
-    // הפונקציה החדשה ב-ClientService:
     public String loginAndGetToken(String email, String password) {
-        // 1. מחפשים משתמש
-        Users user = usersRepo.findByEmail(email)
+        Users user = usersRepo.findByEmailIgnoreCase(email)
                 .orElseThrow(() -> new RuntimeException("משתמש לא קיים"));
-
-        // 2. בודקים סיסמה
         if (!passwordEncoder.matches(password, user.getPassword())) {
             throw new RuntimeException("סיסמה שגויה");
         }
-
-        // 3. מייצרים ומחזירים את הטוקן
         return jwtUtil.generateToken(user.getEmail(), user.getRole(), user.getCode());
     }
     public Users getUserById(int id) {
@@ -120,6 +118,44 @@ public class ClientService {
         cake.getRecommendation().add(safeText);
         cakeRepo.save(cake);
         return cake.getRecommendation();
+    }
+
+    public void generateResetToken(String email) {
+        // 1. מחפשים את המשתמש
+        Users user = usersRepo.findByEmailIgnoreCase(email)
+                .orElseThrow(() -> new RuntimeException("משתמש לא נמצא"));
+
+        // 2. מייצרים טוקן אקראי וייחודי
+        String token = UUID.randomUUID().toString();
+
+        // 3. שומרים במשתמש ונותנים תוקף של 15 דקות
+        user.setResetToken(token);
+        user.setResetTokenExpiry(LocalDateTime.now().plusMinutes(15));
+        usersRepo.save(user);
+
+        // 4. נדפיס לקונסול את הקישור (בהמשך נחליף את זה בשליחת אימייל אמיתית)
+        // הכתובת כאן היא הכתובת של צד הלקוח שלך
+        String resetLink = "http://localhost:8081/reset-password?token=" + token;
+        emailService.sendEmail(email, "שחזור סיסמה - מאפיית הבוטיק",
+                "שלום, כדי לאפס את הסיסמה לחצי על הקישור הבא: " + resetLink);
+    }
+    public void resetPassword(String token, String newPassword) {
+        // 1. מחפשים משתמש שיש לו בדיוק את הטוקן הזה
+        Users user = usersRepo.findByResetToken(token)
+                .orElseThrow(() -> new RuntimeException("קישור לא חוקי או שגוי"));
+
+        // 2. בודקים שהטוקן לא פג תוקף (עברו יותר מ-15 דקות)
+        if (user.getResetTokenExpiry().isBefore(LocalDateTime.now())) {
+            throw new RuntimeException("פג תוקפו של הקישור. אנא בקש קישור חדש.");
+        }
+
+        // 3. מעדכנים לסיסמה החדשה (וכמובן מצפינים אותה!)
+        user.setPassword(passwordEncoder.encode(newPassword));
+
+        // 4. מוחקים את הטוקן כדי שלא יוכלו להשתמש בו שוב
+        user.setResetToken(null);
+        user.setResetTokenExpiry(null);
+        usersRepo.save(user);
     }
     public List<OrderItem> addToCart(Cakes cakeFromClient, int userId) {
         // 1. מציאת המשתמש ב-DB
@@ -196,7 +232,7 @@ public class ClientService {
 
         // 1. שליפת המשתמש דרך ה-Security Context במקום לסמוך על הדפדפן! (זה הרבה יותר בטוח)
         String currentUserEmail = SecurityContextHolder.getContext().getAuthentication().getName();
-        Users realUser = usersRepo.findByEmail(currentUserEmail)
+        Users realUser = usersRepo.findByEmailIgnoreCase(currentUserEmail)
                 .orElseThrow(() -> new RuntimeException("אבטחה: משתמש לא מחובר או לא נמצא"));
 
         // 2. משיכת הפריטים ישירות מעגלת המשתמש

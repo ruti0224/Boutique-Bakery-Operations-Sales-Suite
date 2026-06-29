@@ -1,4 +1,6 @@
 #FileLock
-#Wed Jun 03 21:58:02 UTC 2026
-id=19e8f7e56ad8fefe2bcbe1cbf3cb90d2b24712a1efe
+#Mon Jun 29 23:40:01 IDT 2026
+hostName=RutiShrem
+id=19f151c29539706cce15fcbae9f660e66a3fe0eb2eb
 method=file
+server=192.168.242.1\:60339

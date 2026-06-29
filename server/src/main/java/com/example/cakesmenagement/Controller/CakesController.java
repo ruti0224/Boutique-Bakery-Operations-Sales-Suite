@@ -12,7 +12,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/cakes")
-@CrossOrigin
 public class CakesController {
 
     @Autowired
