@@ -21,7 +21,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static com.example.cakesmenagement.Entities.Orders.OrderStatus.PAID;
-@CrossOrigin(origins = "http://localhost:8081")
+
 @Service
 @Transactional
 public class ClientService {
@@ -81,21 +81,19 @@ public class ClientService {
             throw new RuntimeException("אבטחה: אין לך הרשאה לעדכן פרטים של משתמש אחר!");
         }
 
-        // עדכון פרטים רגילים
         user.setName(u1.getName());
         user.setEmail(u1.getEmail());
         user.setPhoneNumber(u1.getPhoneNumber());
+        usersRepo.save(user);
+    }
 
-        // הגנה על הסיסמה - מעדכנים ומצפינים רק אם נשלחה סיסמה חדשה
-        if (u1.getPassword() != null && !u1.getPassword().trim().isEmpty()) {
-            user.setPassword(passwordEncoder.encode(u1.getPassword()));
+    public void changePassword(int userId, String oldPassword, String newPassword) {
+        Users user = usersRepo.findById(userId)
+                .orElseThrow(() -> new RuntimeException("משתמש לא נמצא"));
+        if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
+            throw new RuntimeException("הסיסמה הנוכחית שהוזנה שגויה");
         }
-        // בדרך כלל לא נרצה שמשתמש יוכל לשנות לעצמו את ה-Role דרך הפרופיל,
-        // אבל אם זה נדרש אצלך, אפשר להשאיר את זה:
-        if (u1.getRole() != null) {
-            user.setRole(u1.getRole());
-        }
-
+        user.setPassword(passwordEncoder.encode(newPassword));
         usersRepo.save(user);
     }
     public List<OrderItem> getCart(int id) {

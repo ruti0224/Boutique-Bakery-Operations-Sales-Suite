@@ -20,7 +20,7 @@ public class CorsConfig {
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**") // תקף לכל ה-Endpoints של השרת
                         .allowedOrigins(allowedOrigins.split(",")) // תומך גם בפסיקים אם תרצי להגדיר כמה כתובות מורשות
-                        .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS") // מתודות מותרות
+                        .allowedMethods("GET", "POST", "PUT", "DELETE","PATCH", "OPTIONS") // מתודות מותרות
                         .allowedHeaders("*") // מאפשר את כל ה-Headers (כולל Authorization לטוקנים)
                         .allowCredentials(true); // מאפשר העברת קוקיז או פרטי זיהוי אם נצטרך בעתיד
             }

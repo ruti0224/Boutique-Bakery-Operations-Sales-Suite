@@ -86,9 +86,21 @@ function AdminOrders() {
                 <TableCell className="text-sm">{o.orderDate}</TableCell>
                 <TableCell className="text-gold font-bold">₪{o.totalPrice}</TableCell>
                 <TableCell>
-                  <span className="px-3 py-1 bg-espresso/10 text-espresso text-sm font-semibold rounded-full">
-                      {o.status}
-                  </span>
+                  <Select
+                    defaultValue={o.status}
+                    onValueChange={(value) => updateStatus(o.orderCode, value as OrderStatus)}
+                  >
+                    <SelectTrigger className="w-[140px] text-sm h-8">
+                      <SelectValue placeholder="בחר סטטוס" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {STATUSES.map((statusOption) => (
+                        <SelectItem key={statusOption} value={statusOption}>
+                          {LABEL[statusOption]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </TableCell>
                 <TableCell>
                   <Button size="icon" variant="ghost" className="text-destructive" onClick={() => remove(o.orderCode)}>

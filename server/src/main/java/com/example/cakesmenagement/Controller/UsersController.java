@@ -1,4 +1,5 @@
 package com.example.cakesmenagement.Controller;
+import com.example.cakesmenagement.Dto.ChangePasswordRequest;
 import com.example.cakesmenagement.Entities.Cakes;
 import com.example.cakesmenagement.Entities.OrderItem;
 import com.example.cakesmenagement.Entities.Users;
@@ -6,9 +7,11 @@ import com.example.cakesmenagement.Service.AdminService;
 import com.example.cakesmenagement.Service.ClientService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/users")
@@ -53,4 +56,9 @@ public class UsersController {
         adminService.deleteUser(id);
     }
 
+    @PutMapping("/{id}/change-password")
+    public ResponseEntity<?> changePassword(@PathVariable int id, @RequestBody ChangePasswordRequest request) {
+        clientService.changePassword(id, request.getOldPassword(), request.getNewPassword());
+        return ResponseEntity.ok(Map.of("message", "הסיסמה עודכנה בהצלחה"));
+    }
 }

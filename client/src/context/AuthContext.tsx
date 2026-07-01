@@ -23,7 +23,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const t = localStorage.getItem("token");
-    if (t) setTokenState(t);
+    if (t) {
+      const payload = authService.decode(t);
+      if (payload && payload.exp && payload.exp * 1000 < Date.now()) {
+        localStorage.removeItem("token");
+        setTokenState(null);
+      } else {
+        setTokenState(t);
+      }
+    }
   }, []);
 
   const setToken = useCallback((t: string | null) => {

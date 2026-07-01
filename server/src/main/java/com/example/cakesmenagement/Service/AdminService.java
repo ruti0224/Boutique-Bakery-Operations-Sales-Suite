@@ -17,7 +17,6 @@ import java.util.stream.Collectors;
 import static com.example.cakesmenagement.Entities.Orders.OrderStatus.PAID;
 import static com.example.cakesmenagement.Entities.Payments.PaymentStatus.SUCCESS;
 
-@CrossOrigin(origins = "http://localhost:8081")
 @Service
 @Transactional
 public class AdminService {
@@ -149,18 +148,15 @@ public class AdminService {
         cakesRepo.deleteById(id);
     }
 
-    public Cakes updateCake(int id, Cakes updatedCake) {
-        Cakes existingCake = cakesRepo.findById(id)
-                .orElseThrow(() -> new RuntimeException("עוגה לא נמצאה לעדכון"));
+    public Cakes updateCake(int id, Cakes cakeDetails) {
+        Cakes cake = cakesRepo.findById(id).orElseThrow(() -> new RuntimeException("Cake not found"));
 
-        existingCake.setName(updatedCake.getName());
-        existingCake.setPrice(updatedCake.getPrice());
-        existingCake.setDescription(updatedCake.getDescription());
-        existingCake.setImageUrl(updatedCake.getImageUrl());
-        existingCake.setIngredients(updatedCake.getIngredients());
-        existingCake.setActive(updatedCake.isActive());
-
-        return cakesRepo.save(existingCake);
+        if (cakeDetails.getName() != null) cake.setName(cakeDetails.getName());
+        if (cakeDetails.getDescription() != null) cake.setDescription(cakeDetails.getDescription());
+        if (cakeDetails.getPrice() != 0) cake.setPrice(cakeDetails.getPrice());
+        if (cakeDetails.getImageUrl() != null) cake.setImageUrl(cakeDetails.getImageUrl());
+        if (cakeDetails.getCategory() != null) cake.setCategory(cakeDetails.getCategory());
+        return cakesRepo.save(cake);
     }
     public void deletePayment(int id) {
         if (!paymentsRepo.existsById(id)) {
