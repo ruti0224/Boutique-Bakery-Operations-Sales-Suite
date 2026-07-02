@@ -11,6 +11,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Cake, LayoutGrid, LogOut, Package, ShoppingBag, User as UserIcon } from "lucide-react";
+import logo from "@/assets/logo.png";
+
 
 export function Header() {
   const { isAuthenticated, isAdmin, email, openAuth, logout } = useAuth();
@@ -74,10 +76,11 @@ export function Header() {
 
         {/* Brand */}
         <Link to="/" className="order-2 absolute left-1/2 -translate-x-1/2 flex items-center gap-2">
-          <Cake className="h-6 w-6 text-gold" />
-          <span className="font-display text-2xl font-bold text-gradient-gold tracking-tight">
-            מאפיית הזהב
-          </span>
+            <img
+              src={logo}
+              alt="לוגו מאפיית הבוטיק"
+              className="h-14 w-auto object-contain transition-transform duration-300 hover:scale-105 drop-shadow-sm"
+            />
         </Link>
 
         {/* Categories button */}

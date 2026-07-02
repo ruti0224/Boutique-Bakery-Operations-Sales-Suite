@@ -1,0 +1,6 @@
+#FileLock
+#Fri Jul 03 00:50:10 IDT 2026
+hostName=RutiShrem
+id=19f24cf87f6de53d8c0e7bcd66d34dd3bb6014d37b9
+method=file
+server=192.168.33.1\:50127

@@ -12,6 +12,7 @@ public class GlobalExceptionHandler {
     // תופס את כל השגיאות היזומות שזרקת מה-Services עם throw new RuntimeException
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<String> handleRuntimeExceptions(RuntimeException ex) {
+        ex.printStackTrace();
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(ex.getMessage()); // מחזיר בדיוק את הטקסט שכתבת ב-Service
@@ -20,6 +21,7 @@ public class GlobalExceptionHandler {
     // תופס שגיאות של ולידציה (למשל כשחסר @NotBlank או שהאימייל לא תקין)
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<String> handleValidationExceptions(MethodArgumentNotValidException ex) {
+        ex.printStackTrace();
         // שולף את הודעת השגיאה הראשונה שהוגדרה ב-Entity (למשל "שם הוא שדה חובה")
         String errorMessage = ex.getBindingResult().getFieldErrors().get(0).getDefaultMessage();
 
@@ -32,7 +34,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<String> handleDatabaseExceptions(DataAccessException ex) {
         // כאן גם נהוג להדפיס ללוג את השגיאה האמיתית למפתח
         // log.error("Database error occurred", ex);
-
+        ex.printStackTrace();
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body("אירעה שגיאה פנימית בעת הגישה לנתונים. אנא נסה שנית מאוחר יותר.");
@@ -41,6 +43,7 @@ public class GlobalExceptionHandler {
     // רשת ביטחון כללית - תופסת כל שגיאה אחרת שלא הוגדרה מראש
     @ExceptionHandler(Exception.class)
     public ResponseEntity<String> handleGeneralExceptions(Exception ex) {
+        ex.printStackTrace();
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body("אירעה שגיאה בלתי צפויה.");
