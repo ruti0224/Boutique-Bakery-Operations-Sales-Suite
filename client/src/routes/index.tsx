@@ -6,15 +6,16 @@ import { CakeGridSkeleton } from "@/components/cakes/CakeGridSkeleton";
 import { cakeService } from "@/services/cakeService";
 import type { Cake } from "@/types";
 import { Input } from "@/components/ui/input";
-import { Search, Sparkles } from "lucide-react";
-import heroImg from "@/assets/hero-cakes.jpg";
+import { Search, LayoutGrid } from "lucide-react";
 import { extractError } from "@/lib/api";
 import { toast } from "sonner";
+import { Link } from "@tanstack/react-router";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "מאפיית הזהב — דף הבית" },
+      { title: "Sweets — דף הבית" },
       { name: "description", content: "גלריית עוגות יוקרה — הזמינו עוגות פרימיום עם משלוח." },
     ],
   }),
@@ -44,51 +45,79 @@ function HomePage() {
 
   return (
     <PublicShell>
-      {/* Hero */}
-      <section className="relative overflow-hidden">
-        <div className="container mx-auto px-4 py-12 md:py-20 grid md:grid-cols-2 gap-10 items-center">
-          <div className="space-y-6">
-            <div className="inline-flex items-center gap-2 bg-accent/30 text-espresso px-4 py-1.5 rounded-full text-sm border border-gold/30">
-              <Sparkles className="h-4 w-4 text-gold" />
-              קונדיטוריה בוטיק
-            </div>
-            <h1 className="font-display text-4xl md:text-6xl font-bold leading-tight text-espresso">
-              עוגות יוקרה <br />
-              <span className="text-gradient-gold">בנגיעה של זהב</span>
-            </h1>
-            <p className="text-lg text-muted-foreground max-w-md">
-              כל עוגה נאפית באהבה, מחומרי גלם איכותיים. חוויית הזמנה אישית, מהירה ומפנקת.
-            </p>
-            <div className="relative max-w-md">
-              <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="חיפוש עוגה..."
-                className="pr-10 bg-card/80 backdrop-blur"
-                maxLength={80}
-              />
-            </div>
-          </div>
-          <div className="relative">
-            <div className="absolute -inset-4 gradient-gold opacity-20 blur-3xl rounded-full" />
-            <img
-              src="https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=1600&q=80"
-              alt="Boutique Bakery"
-              className="w-full h-full object-cover ..."
+
+      {/* ═══════════════════════════════════════════
+          HERO — כדי לשנות תמונה בעתיד:
+          שמי תמונה חדשה ב־client/public/hero.jpg
+          ושני את src ל־"/hero.jpg"
+          ══════════════════════════════════════════ */}
+     /* אחרי */
+      <section className="relative w-full overflow-hidden" style={{ height: "380px" }}>
+        <img
+          src="/hero.jpg" alt="עוגות"
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+
+        {/* שכבה כהה קבועה קלה */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-black/10" />
+
+        {/* אפקט hover — טשטוש + לוגו */}
+        <div className="absolute inset-0 group flex items-center justify-center
+                  hover:backdrop-blur-sm transition-all duration-500">
+          <img
+            src="/logo sweets.png"
+            alt="Sweets"
+            className="h-36 w-auto object-contain drop-shadow-2xl
+                 opacity-0 group-hover:opacity-100
+                 scale-90 group-hover:scale-100
+                 transition-all duration-500"
+          />
+        </div>
+
+      </section>
+
+      {/* ═══════════════════════════════════════════
+          חיפוש + קטגוריות
+          ══════════════════════════════════════════ */}
+      <section className="container mx-auto px-4 py-8">
+        <div className="flex flex-col sm:flex-row items-center gap-3 max-w-2xl mx-auto">
+
+          {/* שדה חיפוש */}
+          <div className="relative w-full">
+            <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gold pointer-events-none" />
+            <Input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="חיפוש עוגה..."
+              className="pr-11 h-12 text-base bg-card/80 border-gold/40 rounded-xl shadow-elegant"
+              maxLength={80}
             />
           </div>
+
+          {/* כפתור קטגוריות */}
+          <Button
+            asChild
+            variant="outline"
+            className="h-12 px-6 border-gold/50 text-espresso hover:bg-accent/30 rounded-xl whitespace-nowrap w-full sm:w-auto"
+          >
+            <Link to="/categories">
+              <LayoutGrid className="ml-2 h-5 w-5" />
+              צפייה בקטגוריות
+            </Link>
+          </Button>
+
         </div>
       </section>
 
-      {/* Cakes Grid */}
-      <section className="container mx-auto px-4 py-12">
-        <div className="flex items-end justify-between mb-8">
-          <div>
-            <h2 className="font-display text-3xl md:text-4xl font-bold text-espresso">הקולקציה</h2>
-            <p className="text-muted-foreground mt-1">בחרו את העוגה המושלמת לכם</p>
-          </div>
+      {/* ═══════════════════════════════════════════
+          גריד עוגות
+          ══════════════════════════════════════════ */}
+      <section className="container mx-auto px-4 pb-12">
+        <div className="mb-8">
+          <h2 className="font-display text-3xl md:text-4xl font-bold text-espresso">הקולקציה</h2>
+          <p className="text-muted-foreground mt-1">בחרו את העוגה המושלמת לכם</p>
         </div>
+
         {filtered === null ? (
           <CakeGridSkeleton />
         ) : filtered.length === 0 ? (
@@ -101,6 +130,7 @@ function HomePage() {
           </div>
         )}
       </section>
+
     </PublicShell>
   );
 }

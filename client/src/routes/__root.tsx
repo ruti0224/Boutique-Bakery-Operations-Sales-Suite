@@ -73,16 +73,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "מאפיית הזהב — עוגות וקונדיטוריה פרימיום" },
-      {
-        name: "description",
-        content: "עוגות יוקרה בהזמנה אישית, קונדיטוריה פרימיום, חוויית הזמנה אונליין מהנה ומעודנת.",
-      },
-      { property: "og:title", content: "מאפיית הזהב — עוגות וקונדיטוריה" },
+      { title: "Sweets — עוגות וקונדיטוריה פרימיום" },
+      { name: "description", content: "עוגות יוקרה בהזמנה אישית, קונדיטוריה פרימיום, חוויית הזמנה אונליין מהנה ומעודנת." },
+      { property: "og:title", content: "Sweets — עוגות וקונדיטוריה" },
       { property: "og:description", content: "עוגות יוקרה בהזמנה אישית עם משלוח." },
       { property: "og:type", content: "website" },
     ],
     links: [
+      { rel: "icon", href: "/logo.png", type: "image/png" },
       { rel: "stylesheet", href: appCss },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "" },
@@ -102,6 +100,7 @@ function RootShell({ children }: { children: React.ReactNode }) {
   return (
     <html lang="he" dir="rtl">
       <head>
+        <link rel="icon" type="image/png" href="/logo.png" />
         <HeadContent />
       </head>
       <body>
@@ -111,6 +110,7 @@ function RootShell({ children }: { children: React.ReactNode }) {
     </html>
   );
 }
+
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();

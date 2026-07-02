@@ -22,8 +22,7 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/60 bg-background/80 backdrop-blur-md">
-      <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        {/* Profile (top-left in LTR; in RTL this becomes visually right; but spec says top-left) */}
+      <div className="container mx-auto flex h-24 items-center justify-between px-4">     {/* Profile (top-left in LTR; in RTL this becomes visually right; but spec says top-left) */}
         <div className="flex items-center gap-2 order-1">
           {isAuthenticated ? (
             <DropdownMenu>
@@ -76,21 +75,12 @@ export function Header() {
 
         {/* Brand */}
         <Link to="/" className="order-2 absolute left-1/2 -translate-x-1/2 flex items-center gap-2">
-            <img
-              src={logo}
-              alt="לוגו מאפיית הבוטיק"
-              className="h-14 w-auto object-contain transition-transform duration-300 hover:scale-105 drop-shadow-sm"
-            />
+          <img
+            src={logo}
+            alt="לוגו Sweets"
+            className="h-20 w-auto object-contain transition-transform duration-300 hover:scale-105 drop-shadow-sm"
+          />
         </Link>
-
-        {/* Categories button */}
-        <div className="order-3">
-          <Button asChild variant="outline" className="border-gold/50 text-espresso hover:bg-accent/30">
-            <Link to="/categories">
-              <LayoutGrid className="ml-2 h-4 w-4" /> צפייה בקטגוריות
-            </Link>
-          </Button>
-        </div>
       </div>
     </header>
   );

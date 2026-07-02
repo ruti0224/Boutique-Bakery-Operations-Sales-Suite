@@ -2,6 +2,7 @@ import { createFileRoute, Link, Outlet, redirect, useRouterState } from "@tansta
 import { useAuth } from "@/context/AuthContext";
 import { Cake, ChartLine, Folder, ListOrdered, LogOut, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import logo from "@/assets/logo.png";
 
 export const Route = createFileRoute("/admin")({
   component: AdminLayout,
@@ -41,7 +42,11 @@ function AdminLayout() {
       <aside className="md:w-64 md:min-h-screen border-l border-border/60 bg-sidebar flex md:flex-col">
         <div className="p-6 border-b border-border/40 hidden md:block">
           <Link to="/" className="block">
-            <h2 className="font-display text-2xl text-gradient-gold font-bold">מאפיית הזהב</h2>
+            <img
+              src={logo}
+              alt="לוגו"
+              className="h-20 w-auto object-contain"
+            />
             <p className="text-xs text-muted-foreground mt-1">פאנל ניהול</p>
           </Link>
         </div>
@@ -52,11 +57,10 @@ function AdminLayout() {
               <Link
                 key={item.to}
                 to={item.to as any}
-                className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition whitespace-nowrap ${
-                  active
+                className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition whitespace-nowrap ${active
                     ? "bg-espresso text-primary-foreground shadow"
                     : "text-foreground hover:bg-accent/40"
-                }`}
+                  }`}
               >
                 <item.icon className="h-4 w-4" />
                 {item.label}

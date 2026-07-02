@@ -7,12 +7,12 @@ export function Footer() {
         <div className="flex flex-col items-center justify-center mb-6">
           <img
             src={logo}
-            alt="לוגו המאפייה"
-            className="h-24 w-auto object-contain opacity-90 mb-4"
+            alt="לוגו Sweets"
+            className="h-32 w-auto object-contain opacity-90 mb-4"
           />
           <p className="text-muted-foreground text-sm font-medium">נאפה באהבה, לחוויה בלתי נשכחת.</p>
         </div>
-         </div>
+      </div>
     </footer>
   );
 }
