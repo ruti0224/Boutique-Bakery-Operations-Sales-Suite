@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Loader2, Mail } from "lucide-react";
+import { extractError } from "@/lib/api";
 
 export const Route = createFileRoute('/forget-password')({
   component: ForgotPasswordPage,
@@ -22,14 +23,14 @@ function ForgotPasswordPage() {
     setLoading(true);
     try {
       await authService.forgotPassword(email);
-      setMessage("אם המייל קיים במערכת, נשלח אליו קישור לאיפוס סיסמה.");
+      setMessage("success");
     } catch (err) {
-      setMessage("אירעה שגיאה בבקשה, נסה שנית.");
+      const msg = extractError(err, "");
+      setMessage(msg || "error");
     } finally {
       setLoading(false);
     }
   };
-
   return (
     <PublicShell>
       <section className="container mx-auto px-4 py-16 max-w-md">
@@ -66,9 +67,25 @@ function ForgotPasswordPage() {
             </Button>
           </form>
 
-          {message && (
-            <div className="mt-4 p-3 rounded-lg bg-accent/20 border border-gold/30 text-center">
-              <p className="text-sm text-espresso">{message}</p>
+          {message === "success" && (
+            <div className="mt-4 p-4 rounded-lg bg-accent/20 border border-gold/30 text-center flex items-center gap-2 justify-center">
+              <span className="text-green-600 text-lg">✓</span>
+              <p className="text-sm text-espresso font-medium">
+                נשלח קישור לאיפוס סיסמה למייל שלך!
+              </p>
+            </div>
+          )}
+
+          {message && message !== "success" && (
+            <div className="mt-4 p-4 rounded-lg bg-destructive/10 border border-destructive/30 text-center flex items-center gap-2 justify-center">
+              <span className="text-destructive text-lg">!</span>
+              <p className="text-sm text-destructive font-medium">
+                {message === "error"
+                  ? "אירעה שגיאה, נסי שנית מאוחר יותר"
+                  : message.includes("15 דקות")
+                    ? "נשלח כבר קישור לאיפוס — יש להמתין 15 דקות לפני שליחה נוספת"
+                    : message}
+              </p>
             </div>
           )}
         </Card>

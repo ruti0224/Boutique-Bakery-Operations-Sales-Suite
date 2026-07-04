@@ -122,7 +122,13 @@ public class ClientService {
         // 1. מחפשים את המשתמש
         Users user = usersRepo.findByEmailIgnoreCase(email)
                 .orElseThrow(() -> new RuntimeException("משתמש לא נמצא"));
-
+        if (user.getResetToken() != null &&
+                user.getResetTokenExpiry() != null &&
+                user.getResetTokenExpiry().isAfter(LocalDateTime.now())) {
+            throw new RuntimeException(
+                    "נשלח כבר קישור לאיפוס סיסמה. יש להמתין 15 דקות לפני שליחה נוספת."
+            );
+        }
         // 2. מייצרים טוקן אקראי וייחודי
         String token = UUID.randomUUID().toString();
 
@@ -131,11 +137,15 @@ public class ClientService {
         user.setResetTokenExpiry(LocalDateTime.now().plusMinutes(15));
         usersRepo.save(user);
 
-        // 4. נדפיס לקונסול את הקישור (בהמשך נחליף את זה בשליחת אימייל אמיתית)
         // הכתובת כאן היא הכתובת של צד הלקוח שלך
         String resetLink = "http://localhost:8081/reset-password?token=" + token;
-        emailService.sendEmail(email, "שחזור סיסמה - מאפיית הבוטיק",
-                "שלום, כדי לאפס את הסיסמה לחצי על הקישור הבא: " + resetLink);
+
+        emailService.sendEmail(
+                email,
+                "איפוס סיסמה — Sweets",
+                emailService.buildResetPasswordEmail(resetLink)
+        );
+
     }
     public void resetPassword(String token, String newPassword) {
         // 1. מחפשים משתמש שיש לו בדיוק את הטוקן הזה

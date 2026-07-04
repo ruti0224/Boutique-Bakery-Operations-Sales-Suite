@@ -51,7 +51,7 @@ function HomePage() {
           שמי תמונה חדשה ב־client/public/hero.jpg
           ושני את src ל־"/hero.jpg"
           ══════════════════════════════════════════ */}
-     /* אחרי */
+     
       <section className="relative w-full overflow-hidden" style={{ height: "380px" }}>
         <img
           src="/hero.jpg" alt="עוגות"
@@ -109,12 +109,9 @@ function HomePage() {
         </div>
       </section>
 
-      {/* ═══════════════════════════════════════════
-          גריד עוגות
-          ══════════════════════════════════════════ */}
+      
       <section className="container mx-auto px-4 pb-12">
         <div className="mb-8">
-          <h2 className="font-display text-3xl md:text-4xl font-bold text-espresso">הקולקציה</h2>
           <p className="text-muted-foreground mt-1">בחרו את העוגה המושלמת לכם</p>
         </div>
 
