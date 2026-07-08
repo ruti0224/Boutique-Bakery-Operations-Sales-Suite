@@ -39,8 +39,11 @@ public class ClientService {
     private PasswordEncoder passwordEncoder;
     @Autowired
     private EmailService emailService;
+    @Autowired
+    private RateLimitingService rateLimitingService;
 
     public Users register(RegisterRequest request) {
+        rateLimitingService.checkRateLimit();
         if (usersRepo.existsByEmailIgnoreCase(request.getEmail())) {
             throw new RuntimeException("Email already exists");
         }
@@ -229,20 +232,34 @@ public class ClientService {
         return user.getCakesInCart();
     }
     public Orders addOrder(Orders o) {
+        // הגנת בוטים: עצירת הפעולה אם ה-IP הזה ביצע יותר מ-5 הזמנות בחצי שעה האחרונה
+        rateLimitingService.checkRateLimit();
+
         if (o.getNotes() != null) {
             o.setNotes(HtmlUtils.htmlEscape(o.getNotes()));
         }
-
-        // מוודאים שמעבירים סטטוס (PAID נחשב 1 כברירת מחדל אצלנו עכשיו)
+        // שינוי לפרודקשן: אם לא עבר סטטוס, נגדיר אותו כממתין לתשלום (במקום לזרוק שגיאה)
         if(o.getStatus() == null){
-            throw new RuntimeException("you didn't pay");
+            o.setStatus(Orders.OrderStatus.PENDING_PAYMENT);
         }
 
-        // 1. שליפת המשתמש דרך ה-Security Context במקום לסמוך על הדפדפן! (זה הרבה יותר בטוח)
+        // 1. שליפת המשתמש (כבר קיים אצלך)
         String currentUserEmail = SecurityContextHolder.getContext().getAuthentication().getName();
         Users realUser = usersRepo.findByEmailIgnoreCase(currentUserEmail)
                 .orElseThrow(() -> new RuntimeException("אבטחה: משתמש לא מחובר או לא נמצא"));
 
+        // --- הגנת אנטי-ספאם 1: חסימת ריבוי הזמנות ממתינות לתשלום ---
+        if (realUser.getUserOrders() != null) {
+            long pendingOrdersCount = realUser.getUserOrders().stream()
+                    .filter(order -> order.getStatus() == Orders.OrderStatus.PENDING_PAYMENT)
+                    .count();
+
+            // אם למשתמש יש כבר 2 הזמנות שלא שולמו, נחסום אותו מלעשות עוד אחת
+            if (pendingOrdersCount >= 2) {
+                throw new RuntimeException("מטעמי אבטחה: יש לך כבר הזמנות הממתינות לתשלום. אנא הסדר תשלום מול העסק לפני ביצוע הזמנה חדשה.");
+            }
+        }
+        // -------------------------------------------------------------
         // 2. משיכת הפריטים ישירות מעגלת המשתמש
         List<OrderItem> cartItems = realUser.getCakesInCart();
         if (cartItems == null || cartItems.isEmpty()) {
@@ -273,10 +290,40 @@ public class ClientService {
         realUser.getUserOrders().add(o);
         realUser.getCakesInCart().clear();
 
-        orderRepo.save(o);
+        // 5. שמירה במסד הנתונים
+        Orders savedOrder = orderRepo.save(o);
         usersRepo.save(realUser);
 
-        return o;
+        // 6. בניית פירוט העוגות עבור המייל למנהלת
+        StringBuilder itemsHtml = new StringBuilder();
+        for (OrderItem item : orderItems) {
+            itemsHtml.append(String.format("<tr><td style='border-bottom: 1px solid #eee;'>%s</td><td style='border-bottom: 1px solid #eee; text-align: left;'>כמות: %d</td></tr>",
+                    item.getCake().getName(), item.getQuantity()));
+        }
+
+        // 7. שליחת מייל לבעלת העסק
+        String adminEmail = "rutishrem0224@gmail.com";
+        String customerName = realUser.getName();
+        String customerPhone = realUser.getPhoneNumber() != null ? realUser.getPhoneNumber() : "לא הוזן";
+
+        String adminContent = emailService.buildNewOrderEmailForAdmin(
+                savedOrder.getOrderCode(),
+                savedOrder.getTotalPrice(),
+                customerName,
+                customerPhone,
+                itemsHtml.toString() // העברת פירוט העוגות
+        );
+        emailService.sendEmail(adminEmail, "הזמנה חדשה באתר! (#" + savedOrder.getOrderCode() + ")", adminContent);
+
+        // 8. שליחת מייל ללקוח (נשאר כפי שהיה - ללא מספר הזמנה וללא פירוט)
+        String customerEmail = realUser.getEmail();
+        String customerContent = emailService.buildOrderConfirmationForCustomer(
+                customerName,
+                savedOrder.getTotalPrice()
+        );
+        emailService.sendEmail(customerEmail, "אישור הזמנה — Sweets", customerContent);
+
+        return savedOrder;
     }
     public Optional<Orders> getOrdersById(int userId) {
         if (!usersRepo.existsById(userId))

@@ -49,6 +49,6 @@ public class Orders {
     private List<OrderItem> cakes;
 
     public enum OrderStatus {
-        PAID, READY_FOR_PICKUP, DELIVERED, CANCELLED
+        PENDING_PAYMENT, PAID, READY_FOR_PICKUP, DELIVERED, CANCELLED
     }
 }
