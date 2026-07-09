@@ -23,7 +23,7 @@ public class EmailService {
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
             helper.setTo(to);
             helper.setSubject(subject);
-            helper.setFrom("rutishrem0224@gmail.com");
+            helper.setFrom("sweets.boutique.bakery.info@gmail.com");
             helper.setText(htmlContent, true);
 
             // מצרף את הלוגו כ-CID

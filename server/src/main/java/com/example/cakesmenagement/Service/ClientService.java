@@ -107,7 +107,7 @@ public class ClientService {
             // בניית המאמת הרשמי של גוגל
             GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(new NetHttpTransport(), new GsonFactory())
                     // החליפי את המחרוזת למטה ב-Client ID האמיתי שקיבלת מה-Google Developer Console שלך
-                    .setAudience(Collections.singletonList("YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com"))
+                    .setAudience(Collections.singletonList("314706987398-npml3p0mgbnq08bp09921gl2rqkgmd73.apps.googleusercontent.com"))
                     .build();
 
             GoogleIdToken idToken = verifier.verify(googleToken);
@@ -371,7 +371,7 @@ public class ClientService {
         }
 
         // 7. שליחת מייל לבעלת העסק
-        String adminEmail = "rutishrem0224@gmail.com";
+        String adminEmail = "sweets.boutique.bakery.info@gmail.com";
         String customerName = realUser.getName();
         String customerPhone = realUser.getPhoneNumber() != null ? realUser.getPhoneNumber() : "לא הוזן";
 
