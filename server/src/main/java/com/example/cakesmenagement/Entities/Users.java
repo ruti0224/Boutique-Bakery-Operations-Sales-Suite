@@ -38,8 +38,7 @@ public class Users {
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "cakes_in_cart_code")
     private List<OrderItem> cakesInCart;
-    @OneToMany
-    @JoinColumn
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private List<Orders> userOrders;
     private String resetToken;

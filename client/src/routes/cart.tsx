@@ -5,7 +5,8 @@ import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Trash2, ShoppingBag, Loader2, MessageCircle, CheckCircle } from "lucide-react";
+// הוספתי כאן את האייקון ArrowRight עבור כפתור החזרה
+import { Trash2, ShoppingBag, Loader2, MessageCircle, CheckCircle, ArrowRight } from "lucide-react";
 import { orderService } from "@/services/orderService";
 import { extractError } from "@/lib/api";
 import { toast } from "sonner";
@@ -20,7 +21,8 @@ function CartPage() {
   const { items, total, remove, refresh, clear } = useCart();
   const navigate = useNavigate();
   const [isProcessing, setIsProcessing] = useState(false);
-const [completedOrder, setCompletedOrder] = useState<{ id: number, total: number, items: any[] } | null>(null);
+  const [completedOrder, setCompletedOrder] = useState<{ id: number, total: number, items: any[] } | null>(null);
+
   useEffect(() => {
     if (!isAuthenticated) openAuth();
   }, [isAuthenticated, openAuth]);
@@ -89,7 +91,6 @@ const [completedOrder, setCompletedOrder] = useState<{ id: number, total: number
             פרטי ההזמנה הועברו לבעלת העסק במייל. כדי לתאם את התשלום, נשמח שתשלחו לנו הודעה קצרה בוואטסאפ.
           </p>
 
-          {/* כרטיס הסיכום - משתמש בדיוק באותו עיצוב של כרטיס התשלום מהעגלה המקורית שלך */}
           <Card className="p-8 w-full max-w-md bg-gradient-to-br from-secondary/60 to-accent/20 border-gold/30 text-center shadow-md">
             <div className="mb-6 space-y-3">
               <p className="text-lg text-espresso font-medium">
@@ -97,7 +98,6 @@ const [completedOrder, setCompletedOrder] = useState<{ id: number, total: number
               </p>
               <div className="flex flex-col items-center justify-center gap-1">
                 <span className="text-lg text-espresso">סה״כ לתשלום</span>
-                {/* טקסט הזהב הייחודי של הפרויקט שלך */}
                 <span className="text-4xl font-bold text-gradient-gold">₪{completedOrder.total.toFixed(2)}</span>
               </div>
             </div>
@@ -108,7 +108,6 @@ const [completedOrder, setCompletedOrder] = useState<{ id: number, total: number
               rel="noopener noreferrer" 
               className="block w-full"
             >
-              {/* אנחנו משתמשים ברכיב ה-Button המקורי שלך, ורק משנים לו את צבע הרקע לירוק וואטסאפ */}
               <Button className="w-full bg-[#25D366] hover:bg-[#20b858] text-white h-14 text-lg shadow hover:shadow-md transition-all gap-2">
                 <MessageCircle className="h-6 w-6" />
                 לשליחת ההזמנה בוואטסאפ
@@ -131,9 +130,20 @@ const [completedOrder, setCompletedOrder] = useState<{ id: number, total: number
   return (
     <PublicShell>
       <section className="container mx-auto px-4 py-12 max-w-4xl">
-        <h1 className="font-display text-4xl font-bold text-espresso mb-8 flex items-center gap-3">
-          <ShoppingBag className="h-8 w-8 text-gold" /> הסל שלי
-        </h1>
+        
+        {/* הוספתי כאן את הכפתור "להמשך קנייה" ליד הכותרת */}
+        <div className="flex items-center justify-between mb-8">
+          <h1 className="font-display text-4xl font-bold text-espresso flex items-center gap-3">
+            <ShoppingBag className="h-8 w-8 text-gold" /> הסל שלי
+          </h1>
+          <Button 
+            variant="outline" 
+            onClick={() => navigate({ to: "/" })}
+            className="border-gold/50 text-espresso hover:bg-gold/10 transition-colors"
+          >
+            <ArrowRight className="mr-2 h-4 w-4" /> להמשך קנייה
+          </Button>
+        </div>
 
         {!isAuthenticated ? (
           <p className="text-muted-foreground">התחבר כדי לצפות בסל</p>

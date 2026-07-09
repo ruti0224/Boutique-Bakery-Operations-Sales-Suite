@@ -1,8 +1,9 @@
 import { useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
 import type { Cake } from "@/types";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Minus, Plus } from "lucide-react";
+import { Minus, Plus, ShoppingCart } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
 import { CakeDetailsModal } from "./CakeDetailsModal";
@@ -17,6 +18,7 @@ const FALLBACK =
 export function CakeCard({ cake }: Props) {
   const { isAuthenticated, openAuth } = useAuth();
   const { add, remove, quantityOf } = useCart();
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const qty = quantityOf(cake.id);
 
@@ -40,10 +42,10 @@ export function CakeCard({ cake }: Props) {
   return (
     <>
       <Card
-        className="group overflow-hidden cursor-pointer shadow-elegant hover:shadow-gold transition-all duration-500 hover:-translate-y-1 bg-card border-border/60"
+        className="group overflow-hidden cursor-pointer shadow-elegant hover:shadow-gold transition-all duration-500 hover:-translate-y-1 bg-card border-border/60 flex flex-col h-full"
         onClick={() => setOpen(true)}
       >
-        <div className="relative aspect-[4/3] overflow-hidden bg-muted">
+        <div className="relative aspect-[4/3] overflow-hidden bg-muted shrink-0">
           <img
             src={cake.imageUrl || FALLBACK}
             alt={cake.name}
@@ -62,34 +64,52 @@ export function CakeCard({ cake }: Props) {
             </span>
           )}
         </div>
-        <div className="p-4 space-y-3">
+        <div className="p-4 space-y-3 flex flex-col flex-1 justify-between">
           <div className="flex items-start justify-between gap-2">
             <h3 className="font-display text-lg font-semibold text-espresso line-clamp-1">
               {cake.name}
             </h3>
             <span className="text-gold font-bold whitespace-nowrap">₪{cake.price}</span>
           </div>
-          <div className="flex items-center justify-between gap-2 pt-2 border-t border-border/50">
-            <Button
-              size="icon"
-              onClick={handleAdd}
-              disabled={!cake.isActive}
-              className="h-9 w-9 rounded-full bg-espresso hover:bg-espresso/90 text-primary-foreground shadow-gold"
-              aria-label="הוסף"
-            >
-              <Plus className="h-4 w-4" />
-            </Button>
-            <span className="text-lg font-bold text-espresso min-w-[2rem] text-center">{qty}</span>
-            <Button
-              size="icon"
-              variant="outline"
-              onClick={handleRemove}
-              disabled={qty === 0 || !cake.isActive}
-              className="h-9 w-9 rounded-full border-gold/40"
-              aria-label="הפחת"
-            >
-              <Minus className="h-4 w-4" />
-            </Button>
+          <div className="flex flex-col pt-2 border-t border-border/50">
+            <div className="flex items-center justify-between gap-2">
+              <Button
+                size="icon"
+                onClick={handleAdd}
+                disabled={!cake.isActive}
+                className="h-9 w-9 rounded-full bg-espresso hover:bg-espresso/90 text-primary-foreground shadow-gold"
+                aria-label="הוסף"
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+              <span className="text-lg font-bold text-espresso min-w-[2rem] text-center">{qty}</span>
+              <Button
+                size="icon"
+                variant="outline"
+                onClick={handleRemove}
+                disabled={qty === 0 || !cake.isActive}
+                className="h-9 w-9 rounded-full border-gold/40"
+                aria-label="הפחת"
+              >
+                <Minus className="h-4 w-4" />
+              </Button>
+            </div>
+            
+            {/* התיקון כאן: האפקט מבוסס אך ורק על group-hover כדי להבטיח היעלמות מיידית ביציאת העכבר */}
+            {qty > 0 && (
+              <div className="overflow-hidden transition-all duration-300 max-h-0 opacity-0 group-hover:max-h-12 group-hover:opacity-100 group-hover:mt-3">
+                <Button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate({ to: "/cart" });
+                  }} 
+                  variant="default" 
+                  className="w-full bg-gold hover:bg-gold/90 text-espresso font-bold transition-all shadow-sm"
+                >
+                  <ShoppingCart className="ml-2 h-4 w-4" /> מעבר לעגלה
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       </Card>

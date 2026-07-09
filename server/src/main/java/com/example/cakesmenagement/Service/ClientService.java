@@ -21,6 +21,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static com.example.cakesmenagement.Entities.Orders.OrderStatus.PAID;
+import static com.example.cakesmenagement.Entities.Orders.OrderStatus.PENDING_PAYMENT;
 
 @Service
 @Transactional
@@ -238,11 +239,8 @@ public class ClientService {
         if (o.getNotes() != null) {
             o.setNotes(HtmlUtils.htmlEscape(o.getNotes()));
         }
-        // שינוי לפרודקשן: אם לא עבר סטטוס, נגדיר אותו כממתין לתשלום (במקום לזרוק שגיאה)
-        if(o.getStatus() == null){
-            o.setStatus(Orders.OrderStatus.PENDING_PAYMENT);
-        }
 
+        o.setStatus(PENDING_PAYMENT);
         // 1. שליפת המשתמש (כבר קיים אצלך)
         String currentUserEmail = SecurityContextHolder.getContext().getAuthentication().getName();
         Users realUser = usersRepo.findByEmailIgnoreCase(currentUserEmail)
@@ -251,7 +249,7 @@ public class ClientService {
         // --- הגנת אנטי-ספאם 1: חסימת ריבוי הזמנות ממתינות לתשלום ---
         if (realUser.getUserOrders() != null) {
             long pendingOrdersCount = realUser.getUserOrders().stream()
-                    .filter(order -> order.getStatus() == Orders.OrderStatus.PENDING_PAYMENT)
+                    .filter(order -> order.getStatus() == PENDING_PAYMENT)
                     .count();
 
             // אם למשתמש יש כבר 2 הזמנות שלא שולמו, נחסום אותו מלעשות עוד אחת

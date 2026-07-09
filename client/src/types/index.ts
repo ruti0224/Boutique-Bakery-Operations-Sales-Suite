@@ -31,7 +31,8 @@ export interface OrderItem {
   cake: Cake;
 }
 
-export type OrderStatus = "PAID" | "READY_FOR_PICKUP" | "DELIVERED" | "CANCELLED";
+// הסטטוס PENDING הוסף לכאן
+export type OrderStatus = "PENDING_PAYMENT" | "PAID" | "READY_FOR_PICKUP" | "DELIVERED" | "CANCELLED";
 
 export interface Order {
   orderCode: number;

@@ -20,9 +20,9 @@ export const Route = createFileRoute("/admin/orders")({
   component: AdminOrders,
 });
 
-const STATUSES: OrderStatus[] = ["PAID", "READY_FOR_PICKUP", "DELIVERED", "CANCELLED"];
+const STATUSES: OrderStatus[] = ["PENDING_PAYMENT", "PAID", "READY_FOR_PICKUP", "DELIVERED", "CANCELLED"];
 const LABEL: Record<OrderStatus, string> = {
-  PAID: "שולם", READY_FOR_PICKUP: "מוכן לאיסוף", DELIVERED: "נמסר", CANCELLED: "בוטל",
+  PENDING_PAYMENT:"ממתין לתשלום", PAID: "שולם", READY_FOR_PICKUP: "מוכן לאיסוף", DELIVERED: "נמסר", CANCELLED: "בוטל",
 };
 
 function AdminOrders() {
