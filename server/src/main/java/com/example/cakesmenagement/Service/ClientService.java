@@ -19,7 +19,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.gson.GsonFactory;
+import com.example.cakesmenagement.security.TokenBlacklistService;
+import com.example.cakesmenagement.Dto.AuthResponse;
+import com.example.cakesmenagement.Dto.RegisterRequest;
+import java.util.Collections;
+import java.util.UUID;
 import static com.example.cakesmenagement.Entities.Orders.OrderStatus.PAID;
 import static com.example.cakesmenagement.Entities.Orders.OrderStatus.PENDING_PAYMENT;
 
@@ -42,6 +50,11 @@ public class ClientService {
     private EmailService emailService;
     @Autowired
     private RateLimitingService rateLimitingService;
+    @Autowired
+    private TokenBlacklistService tokenBlacklistService;
+
+    @Autowired
+    private JwtUtil jwtUtil;
 
     public Users register(RegisterRequest request) {
         rateLimitingService.checkRateLimit();
@@ -56,9 +69,6 @@ public class ClientService {
         u.setRole("ROLE_USER");
         return usersRepo.save(u);
     }
-    @Autowired
-    private JwtUtil jwtUtil;
-
 
     public String loginAndGetToken(String email, String password) {
         Users user = usersRepo.findByEmailIgnoreCase(email)
@@ -67,6 +77,67 @@ public class ClientService {
             throw new RuntimeException("סיסמה שגויה");
         }
         return jwtUtil.generateToken(user.getEmail(), user.getRole(), user.getCode());
+    }
+
+    // הוסיפי את ה-Imports הללו בראש קובץ ה-ClientService:
+
+
+    // הוסיפי את ההזרקה הזו בתוך המחלקה:
+
+
+
+    // 1️⃣ מתודת הרשמה מובנית המבצעת Auto-Login ומחזירה ישר AuthResponse
+    public AuthResponse registerAndGetToken(RegisterRequest request) {
+        // קריאה למתודת הרישום הקיימת והנקייה שלך שכבר שומרת ב-DB
+        Users registeredUser = this.register(request);
+
+        // הפקת טוקן מיידית עבור המשתמש החדש ללא צורך במסך התחברות נוסף
+        String token = jwtUtil.generateToken(registeredUser.getEmail(),registeredUser.getRole(), registeredUser.getCode());
+        return new AuthResponse(token);
+    }
+
+    // 2️⃣ מנגנון Logout - רישום הטוקן ברשימה השחורה לפסילה מיידית
+    public void logout(String token) {
+        tokenBlacklistService.blacklistToken(token);
+    }
+
+    // 3️⃣ לוגיקת אימות ורישום מול גוגל (OAuth2 Login)
+    public AuthResponse loginWithGoogle(String googleToken) {
+        try {
+            // בניית המאמת הרשמי של גוגל
+            GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(new NetHttpTransport(), new GsonFactory())
+                    // החליפי את המחרוזת למטה ב-Client ID האמיתי שקיבלת מה-Google Developer Console שלך
+                    .setAudience(Collections.singletonList("YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com"))
+                    .build();
+
+            GoogleIdToken idToken = verifier.verify(googleToken);
+            if (idToken == null) {
+                throw new RuntimeException("טוקן גוגל אינו תקין או פג תוקף");
+            }
+
+            GoogleIdToken.Payload payload = idToken.getPayload();
+            String email = payload.getEmail().toLowerCase();
+            String name = (String) payload.get("name");
+
+            // בדיקה האם המשתמש כבר קיים במערכת (לפי אימייל)
+            Users user = usersRepo.findByEmailIgnoreCase(email).orElseGet(() -> {
+                // אם המשתמש לא קיים - נרשום אותו אוטומטית בפעם הראשונה
+                Users newUser = new Users();
+                newUser.setEmail(email);
+                newUser.setName(name);
+                newUser.setRole("ROLE_USER");
+                // יצירת סיסמה אקראית מאובטחת (הוא תמיד יתחבר דרך גוגל)
+                newUser.setPassword(passwordEncoder.encode(UUID.randomUUID().toString()));
+                return usersRepo.save(newUser);
+            });
+
+            // הפקת טוקן JWT פנימי של האפליקציה שלך עבור המשתמש המאומת
+            String systemToken = jwtUtil.generateToken(user.getEmail(),user.getRole(),user.getCode());
+            return new AuthResponse(systemToken);
+
+        } catch (Exception e) {
+            throw new RuntimeException("שגיאה בתהליך אימות ה-Google Auth: " + e.getMessage());
+        }
     }
     public Users getUserById(int id) {
         Users user = usersRepo.findById(id)

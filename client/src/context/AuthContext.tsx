@@ -9,7 +9,7 @@ interface AuthContextValue {
   userId: number | null;
   email: string | null;
   setToken: (t: string | null) => void;
-  logout: () => void;
+  logout: () => Promise<void>; // שונה להחזרת Promise
   openAuth: () => void;
   closeAuth: () => void;
   authOpen: boolean;
@@ -40,7 +40,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setTokenState(t);
   }, []);
 
-  const logout = useCallback(() => setToken(null), [setToken]);
+  // 🔹 שודרג: קורא לשרת לפסול את הטוקן, ורק אז מוחק אותו מהצד לקוח
+  const logout = useCallback(async () => {
+    if (token) {
+      await authService.logout();
+    }
+    setToken(null);
+  }, [setToken, token]);
 
   const value = useMemo<AuthContextValue>(() => {
     const payload = token ? authService.decode(token) : null;

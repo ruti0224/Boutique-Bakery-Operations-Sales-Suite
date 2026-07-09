@@ -19,18 +19,38 @@ export const authService = {
     const res = await api.post("/auth/login", { email, password });
     return typeof res.data === "string" ? res.data : (res.data?.token ?? "");
   },
+
+  // 🔹 חדש: אימות טוקן גוגל מול השרת שלנו
+  async googleLogin(googleToken: string): Promise<string> {
+    const res = await api.post("/auth/google", { token: googleToken });
+    return typeof res.data === "string" ? res.data : (res.data?.token ?? "");
+  },
+
+  // 🔹 חדש: שליחת בקשת התנתקות לשרת כדי לפסול את הטוקן (Blacklist)
+  async logout(): Promise<void> {
+    try {
+      await api.post("/auth/logout");
+    } catch (e) {
+      console.error("שגיאה בהתנתקות מול השרת", e);
+    }
+  },
+
   async forgotPassword(email: string): Promise<string> {
     const res = await api.post("/auth/forgot-password", { email });
     return res.data;
   },
+
   async resetPassword(token: string, newPassword: string): Promise<string> {
     const res = await api.post("/auth/reset-password", { token, newPassword });
     return res.data;
   },
-  async register(data: { name: string; email: string; password: string; phoneNumber: string }) {
+
+  // 🔹 שודרג: כעת מחזיר את הטוקן (Auto-Login) בדיוק כמו ה-login
+  async register(data: { name: string; email: string; password: string; phoneNumber: string }): Promise<string> {
     const res = await api.post("/auth/register", data);
-    return res.data;
+    return typeof res.data === "string" ? res.data : (res.data?.token ?? "");
   },
+
   decode(token: string): JwtPayload | null {
     try {
       return jwtDecode<JwtPayload>(token);
@@ -38,6 +58,7 @@ export const authService = {
       return null;
     }
   },
+
   isAdmin(payload: JwtPayload | null): boolean {
     if (!payload) return false;
     if (payload.role === "ROLE_ADMIN") return true;

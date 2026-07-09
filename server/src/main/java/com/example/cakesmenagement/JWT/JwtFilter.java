@@ -22,7 +22,8 @@ public class JwtFilter extends OncePerRequestFilter {
 
     @Autowired
     private JwtUtil jwtUtil; // משתמשים במחלקת JwtUtil שלנו
-
+    @Autowired
+    private com.example.cakesmenagement.security.TokenBlacklistService tokenBlacklistService;
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
@@ -42,7 +43,11 @@ public class JwtFilter extends OncePerRequestFilter {
         // 🔹 4. בודקים אם יש טוקן ומתחיל ב-"Bearer "
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7); // חותכים את "Bearer "
-
+            if (token != null && tokenBlacklistService.isBlacklisted(token)) {
+                response.setStatus(jakarta.servlet.http.HttpServletResponse.SC_UNAUTHORIZED);
+                response.getWriter().write("התחברות פגה או פוסלה (Logged out)");
+                return;
+            }
             try {
                 // 🔹 5. מפענחים את הטוקן כדי לקבל Claims (מייל ותפקיד)
                 Claims claims = jwtUtil.extractClaims(token);
