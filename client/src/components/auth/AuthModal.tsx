@@ -121,8 +121,7 @@ export function AuthModal() {
   };
 
   return (
-    // 🔹 חובה להזין כאן את ה-Client ID שלכם מגוגל
-    <GoogleOAuthProvider clientId="YOUR_GOOGLE_CLIENT_ID">
+    <GoogleOAuthProvider clientId="314706987398-npml3p0mgbnq08bp09921gl2rqkgmd73.apps.googleusercontent.com">
       <Dialog open={authOpen} onOpenChange={(o) => !o && closeAuth()}>
         <DialogContent className="sm:max-w-md" dir="rtl">
           <DialogHeader>
