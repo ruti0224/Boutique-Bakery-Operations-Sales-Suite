@@ -1,4 +1,4 @@
-import { useState, type FormEvent, type ReactNode } from "react";
+import { useState, type FormEvent } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,7 @@ import { extractError } from "@/lib/api";
 import { useNavigate } from "@tanstack/react-router";
 import { z } from "zod";
 import { Link } from "@tanstack/react-router";
+import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 
 const loginSchema = z.object({
   email: z.string().trim().email("אימייל לא תקין").max(255),
@@ -24,21 +25,6 @@ const registerSchema = z.object({
   password: z.string().min(6, "סיסמה חייבת להכיל לפחות 6 תווים").max(100),
   phoneNumber: z.string().regex(/^\d{10}$/, "טלפון חייב להכיל 10 ספרות"),
 });
-
-const GoogleOAuthProvider = ({ children }: { children: ReactNode }) => <>{children}</>;
-
-const GoogleLogin = ({
-  onSuccess,
-  onError,
-}: {
-  onSuccess: (response: any) => void;
-  onError: () => void;
-  useOneTap?: boolean;
-}) => (
-  <Button type="button" className="w-full max-w-xs" onClick={onError}>
-    התחבר עם Google
-  </Button>
-);
 
 export function AuthModal() {
   const { authOpen, closeAuth, setToken } = useAuth();
@@ -74,7 +60,6 @@ export function AuthModal() {
     }
   };
 
-  // 🔹 שודרג: Auto-Login מיד לאחר הרשמה!
   const handleRegister = async (e: FormEvent) => {
     e.preventDefault();
     const parsed = registerSchema.safeParse(regForm);
@@ -100,9 +85,12 @@ export function AuthModal() {
     }
   };
 
-  // 🔹 חדש: טיפול בהצלחת התחברות דרך גוגל
   const handleGoogleSuccess = async (credentialResponse: any) => {
-    if (!credentialResponse.credential) return;
+    if (!credentialResponse.credential) {
+      toast.error("לא התקבל טוקן מגוגל");
+      return;
+    }
+
     setLoading(true);
     try {
       const token = await authService.googleLogin(credentialResponse.credential);
@@ -114,7 +102,7 @@ export function AuthModal() {
         navigate({ to: "/admin" });
       }
     } catch (err) {
-      toast.error(extractError(err, "התחברות באמצעות גוגל נכשלה"));
+      toast.error(extractError(err, "התחברות באמצעות גוגל נכשלה בשרת"));
     } finally {
       setLoading(false);
     }
@@ -135,7 +123,7 @@ export function AuthModal() {
               <TabsTrigger value="login">התחברות</TabsTrigger>
               <TabsTrigger value="register">הרשמה</TabsTrigger>
             </TabsList>
-            
+
             <TabsContent value="login">
               <form onSubmit={handleLogin} className="space-y-4 pt-4">
                 <div className="space-y-2">
@@ -165,20 +153,24 @@ export function AuthModal() {
                   התחברות
                 </Button>
 
-                {/* 🔹 כפתור התחברות עם גוגל */}
-                <div className="flex justify-center mt-4 border-t pt-4">
-                  <GoogleLogin 
+                {/* 🔹 אזור גוגל - מראה בוטיק - התחברות */}
+                <div className="mt-6 flex justify-center">
+                  <GoogleLogin
                     onSuccess={handleGoogleSuccess}
-                    onError={() => toast.error("שגיאה בתקשורת מול גוגל")}
-                    useOneTap
+                    onError={() => toast.error("שגיאה בתקשורת עם Google")}
+                    theme="filled_black"
+                    shape="pill"
+                    size="large"
+                    text="signin_with"
+                    width="320"
                   />
                 </div>
 
-                <Link 
-                    to="/forget-password" 
-                    className="text-sm text-blue-600 hover:underline mt-2 block text-center"
-                    onClick={closeAuth}>
-                    שכחת סיסמה?
+                <Link
+                  to="/forget-password"
+                  className="text-sm text-blue-600 hover:underline mt-2 block text-center"
+                  onClick={closeAuth}>
+                  שכחת סיסמה?
                 </Link>
               </form>
             </TabsContent>
@@ -229,14 +221,20 @@ export function AuthModal() {
                   {loading && <Loader2 className="h-4 w-4 animate-spin" />}
                   הרשמה והתחברות
                 </Button>
-                
-                {/* 🔹 כפתור הרשמה עם גוגל */}
-                <div className="flex justify-center mt-4 border-t pt-4">
-                  <GoogleLogin 
+
+                {/* 🔹 אזור גוגל - מראה בוטיק - הרשמה */}
+                <div className="mt-6 flex justify-center">
+                  <GoogleLogin
                     onSuccess={handleGoogleSuccess}
-                    onError={() => toast.error("שגיאה בתקשורת מול גוגל")}
+                    onError={() => toast.error("שגיאה בתקשורת עם Google")}
+                    theme="filled_black"
+                    shape="pill"
+                    size="large"
+                    text="signin_with"
+                    width="320"
                   />
                 </div>
+
               </form>
             </TabsContent>
           </Tabs>

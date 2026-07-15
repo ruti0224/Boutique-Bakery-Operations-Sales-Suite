@@ -31,4 +31,6 @@ public class Cakes {
     @ManyToOne
     @JoinColumn(name = "category_code") // מומלץ לתת שם ברור לעמודה
     private Categories category;
+
+
 }

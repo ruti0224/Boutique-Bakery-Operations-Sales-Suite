@@ -8,12 +8,13 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-
+import java.io.UnsupportedEncodingException;
 @Service
 public class EmailService {
 
     @Autowired
     private JavaMailSender mailSender;
+
 
     @Async
     public void sendEmail(String to, String subject, String htmlContent) {
@@ -23,16 +24,19 @@ public class EmailService {
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
             helper.setTo(to);
             helper.setSubject(subject);
-            helper.setFrom("sweets.boutique.bakery.info@gmail.com");
+            helper.setFrom("sweets.bakery.info@gmail.com", "Sweets קונדיטוריה בוטיק");
             helper.setText(htmlContent, true);
 
-            // מצרף את הלוגו כ-CID
             ClassPathResource logo = new ClassPathResource("static/logo (2).png");
             helper.addInline("logoImage", logo);
 
             mailSender.send(message);
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException("שגיאה בקידוד שם השולח: " + e.getMessage(), e);
         } catch (MessagingException e) {
-            throw new RuntimeException("שגיאה בשליחת המייל: " + e.getMessage());
+            throw new RuntimeException("שגיאה בשליחת המייל: " + e.getMessage(), e);
+        } catch (RuntimeException e) {
+            throw new RuntimeException("שגיאה באימות מול שרת המייל: " + e.getMessage(), e);
         }
     }
 
@@ -179,7 +183,7 @@ public class EmailService {
                             הזמנה חדשה התקבלה! 🎉
                           </p>
                           <p style="margin:0 0 24px; font-size:15px; color:#6b4f3a; line-height:1.7;">
-                            היי רותי, התקבלה הזמנה חדשה באתר הממתינה לתשלום.
+                            היי אפרת, התקבלה הזמנה חדשה באתר הממתינה לתשלום.
                           </p>
                           <div style="background:#fce9e8; border-right:3px solid #d89e5d; border-radius:8px; padding:14px 16px; margin-bottom:20px;">
                             <p style="margin:0; font-size:15px; color:#8a6040;"><strong>מספר הזמנה:</strong> #%d</p>

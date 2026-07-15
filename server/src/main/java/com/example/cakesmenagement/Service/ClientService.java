@@ -371,7 +371,7 @@ public class ClientService {
         }
 
         // 7. שליחת מייל לבעלת העסק
-        String adminEmail = "sweets.boutique.bakery.info@gmail.com";
+        String adminEmail = "sweets.bakery.info@gmail.com";
         String customerName = realUser.getName();
         String customerPhone = realUser.getPhoneNumber() != null ? realUser.getPhoneNumber() : "לא הוזן";
 

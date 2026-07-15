@@ -38,8 +38,5 @@ public class PaymentsController {
             @RequestParam LocalDate end) {
         return adminService.getRevenueReport(start, end);
     }
-    @DeleteMapping("/admin/{id}")
-    public void deletePayment(@PathVariable int id) {
-        adminService.deletePayment(id);
-    }
+
 }

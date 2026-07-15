@@ -156,13 +156,8 @@ public class AdminService {
         if (cakeDetails.getPrice() != 0) cake.setPrice(cakeDetails.getPrice());
         if (cakeDetails.getImageUrl() != null) cake.setImageUrl(cakeDetails.getImageUrl());
         if (cakeDetails.getCategory() != null) cake.setCategory(cakeDetails.getCategory());
+        cake.setActive(cakeDetails.isActive());
         return cakesRepo.save(cake);
-    }
-    public void deletePayment(int id) {
-        if (!paymentsRepo.existsById(id)) {
-            throw new RuntimeException("Payment not found");
-        }
-        paymentsRepo.deleteById(id);
     }
     /**
      * פונקציה המקבלת סטטוס כמחרוזת, הופכת אותו ל-Enum של המערכת בצורה בטוחה,
