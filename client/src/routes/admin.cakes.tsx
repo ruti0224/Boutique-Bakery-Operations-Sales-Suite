@@ -11,12 +11,8 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { cakeService } from "@/services/cakeService";
 import { categoryService } from "@/services/categoryService";
@@ -56,178 +52,158 @@ function AdminCakes() {
     }
   };
 
-  useEffect(() => {
-    refresh();
-  }, []);
+  useEffect(() => { refresh(); }, []);
 
   const openEdit = (c: Cake) => {
-    // Pre-populate ALL fields including ingredients & isActive
     setForm({
-      id: c.id,
-      name: c.name ?? "",
-      description: c.description ?? "",
-      price: c.price ?? 0,
-      ingredients: c.ingredients ?? "",
-      imageUrl: c.imageUrl ?? "",
-      isActive: !!c.isActive,
-      category: c.category ?? null,
+      id: c.id, name: c.name ?? "", description: c.description ?? "", price: c.price ?? 0,
+      ingredients: c.ingredients ?? "", imageUrl: c.imageUrl ?? "", isActive: !!c.isActive, category: c.category ?? null,
     });
     setOpen(true);
   };
 
   const save = async () => {
     try {
-      if (editing && form.id) {
-        await cakeService.update(form.id, form);
-        toast.success("עודכן");
-      } else {
-        await cakeService.add(form);
-        toast.success("נוסף");
-      }
-      setOpen(false);
-      setForm(empty);
-      refresh();
-    } catch (e) {
-      toast.error(extractError(e, "שגיאה"));
-    }
+      if (editing && form.id) { await cakeService.update(form.id, form); toast.success("עודכן"); } 
+      else { await cakeService.add(form); toast.success("נוסף"); }
+      setOpen(false); setForm(empty); refresh();
+    } catch (e) { toast.error(extractError(e, "שגיאה")); }
   };
 
   const toggleActive = async (c: Cake) => {
     try {
       const updated = await cakeService.update(c.id, { ...c, isActive: !c.isActive });
       setCakes((prev) => prev.map((x) => (x.id === c.id ? { ...x, isActive: updated.isActive } : x)));
-    } catch (e) {
-      toast.error(extractError(e));
-    }
+    } catch (e) { toast.error(extractError(e)); }
   };
 
   const confirmDelete = async () => {
     if (!delId) return;
-    try {
-      await cakeService.remove(delId);
-      toast.success("נמחק");
-      setDelId(null);
-      refresh();
-    } catch (e) {
-      toast.error(extractError(e));
-    }
+    try { await cakeService.remove(delId); toast.success("נמחק"); setDelId(null); refresh(); } 
+    catch (e) { toast.error(extractError(e)); }
   };
 
   return (
-    <div className="space-y-6">
+    // החסימה של w-full ו-overflow-hidden מבטיחה שהכרטיסים לא יברחו הצידה
+    <div className="space-y-5 sm:space-y-6 w-full max-w-full overflow-hidden">
       <div className="flex items-center justify-between">
-        <h1 className="font-display text-3xl font-bold text-espresso">ניהול עוגות</h1>
-        <Button onClick={() => { setForm(empty); setOpen(true); }} className="bg-espresso">
-          <Plus className="ml-2 h-4 w-4" /> עוגה חדשה
+        <h1 className="font-display text-2xl sm:text-3xl font-bold text-espresso">ניהול עוגות</h1>
+        <Button onClick={() => { setForm(empty); setOpen(true); }} className="bg-espresso text-sm px-3 sm:px-4 shrink-0">
+          <Plus className="ml-1 sm:ml-2 h-4 w-4" /> חדשה
         </Button>
       </div>
 
-      <Card className="overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="text-right">תמונה</TableHead>
-              <TableHead className="text-right">שם</TableHead>
-              <TableHead className="text-right">קטגוריה</TableHead>
-              <TableHead className="text-right">מחיר</TableHead>
-              <TableHead className="text-right">זמין</TableHead>
-              <TableHead className="text-right">פעולות</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {loading ? (
-              <TableRow><TableCell colSpan={6} className="text-center py-8">טוען...</TableCell></TableRow>
-            ) : cakes.length === 0 ? (
-              <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">אין עוגות</TableCell></TableRow>
-            ) : cakes.map((c) => (
-              <TableRow
-                key={c.id}
-                className="cursor-pointer hover:bg-secondary/40"
-                onClick={() => setDetailsCake(c)}
-              >
-                <TableCell>
-                  <img src={c.imageUrl} alt={c.name} className="h-12 w-12 rounded-md object-cover bg-muted" />
-                </TableCell>
-                <TableCell className="font-medium">{c.name}</TableCell>
-                <TableCell>{c.category?.name ?? "—"}</TableCell>
-                <TableCell className="text-gold font-bold">₪{c.price}</TableCell>
-                <TableCell onClick={(e) => e.stopPropagation()}>
-                  <div className="flex items-center gap-2">
-                    <Switch checked={!!c.isActive} onCheckedChange={() => toggleActive(c)} />
-                    <span className="text-xs text-muted-foreground">
-                      {c.isActive ? "זמין" : "לא זמין"}
-                    </span>
-                  </div>
-                </TableCell>
-                <TableCell onClick={(e) => e.stopPropagation()}>
-                  <div className="flex gap-1">
-                    <Button size="icon" variant="ghost" onClick={() => openEdit(c)}>
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button size="icon" variant="ghost" className="text-destructive" onClick={() => setDelId(c.id)}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </Card>
+      {loading ? (
+        <div className="text-center py-8">טוען...</div>
+      ) : cakes.length === 0 ? (
+        <div className="text-center py-8 text-muted-foreground">אין עוגות</div>
+      ) : (
+        <>
+          <Card className="hidden md:block overflow-hidden border border-border/50">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="text-right">תמונה</TableHead>
+                  <TableHead className="text-right">שם</TableHead>
+                  <TableHead className="text-right">קטגוריה</TableHead>
+                  <TableHead className="text-right">מחיר</TableHead>
+                  <TableHead className="text-right">זמין</TableHead>
+                  <TableHead className="text-right">פעולות</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {cakes.map((c) => (
+                  <TableRow key={c.id} className="cursor-pointer hover:bg-secondary/40" onClick={() => setDetailsCake(c)}>
+                    <TableCell><img src={c.imageUrl} alt={c.name} className="h-12 w-12 rounded-md object-cover bg-muted" /></TableCell>
+                    <TableCell className="font-medium">{c.name}</TableCell>
+                    <TableCell>{c.category?.name ?? "—"}</TableCell>
+                    <TableCell className="text-gold font-bold">₪{c.price}</TableCell>
+                    <TableCell onClick={(e) => e.stopPropagation()}>
+                      <div className="flex items-center gap-2">
+                        <Switch checked={!!c.isActive} onCheckedChange={() => toggleActive(c)} />
+                        <span className="text-xs text-muted-foreground">{c.isActive ? "זמין" : "לא זמין"}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell onClick={(e) => e.stopPropagation()}>
+                      <div className="flex gap-1">
+                        <Button size="icon" variant="ghost" onClick={() => openEdit(c)}><Pencil className="h-4 w-4" /></Button>
+                        <Button size="icon" variant="ghost" className="text-destructive" onClick={() => setDelId(c.id)}><Trash2 className="h-4 w-4" /></Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </Card>
 
+          {/* מובייל: כרטיסיות תקינות בגודלן */}
+          <div className="md:hidden flex flex-col gap-3 w-full">
+            {cakes.map((c) => (
+              <Card key={c.id} className="p-3.5 flex flex-col gap-3 w-full border border-border/50 shadow-sm" onClick={() => setDetailsCake(c)}>
+                <div className="flex items-start gap-3 w-full">
+                  <img src={c.imageUrl} alt={c.name} className="h-16 w-16 rounded-md object-cover bg-muted shrink-0" />
+                  <div className="flex-1 min-w-0 flex flex-col justify-between h-16">
+                    <h3 className="font-bold text-base text-espresso truncate w-full">{c.name}</h3>
+                    <div className="flex items-end justify-between w-full">
+                      <span className="text-xs text-muted-foreground truncate">{c.category?.name ?? "—"}</span>
+                      <span className="text-gold font-bold text-base">₪{c.price}</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex items-center justify-between pt-2.5 border-t border-border/50 w-full" onClick={(e) => e.stopPropagation()}>
+                  <div className="flex items-center gap-2">
+                    <Switch checked={!!c.isActive} onCheckedChange={() => toggleActive(c)} className="scale-90" />
+                    <Label className="text-xs">{c.isActive ? "זמין" : "לא זמין"}</Label>
+                  </div>
+                  <div className="flex gap-1 shrink-0">
+                    <Button size="sm" variant="ghost" className="h-8 px-2" onClick={() => openEdit(c)}><Pencil className="h-4 w-4" /></Button>
+                    <Button size="sm" variant="ghost" className="h-8 px-2 text-destructive" onClick={() => setDelId(c.id)}><Trash2 className="h-4 w-4" /></Button>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </>
+      )}
+
+      {/* מודלים ללא שינוי - רק וידוא גודל מקסימלי */}
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent dir="rtl" className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogContent dir="rtl" className="w-[95vw] sm:max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle>{editing ? "עריכת עוגה" : "עוגה חדשה"}</DialogTitle></DialogHeader>
           <div className="space-y-3">
-            <div className="space-y-2"><Label>שם</Label><Input value={form.name || ""} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
-            <div className="space-y-2"><Label>תיאור</Label><Textarea value={form.description || ""} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
-            <div className="space-y-2"><Label>מחיר</Label><Input type="number" value={form.price ?? 0} onChange={(e) => setForm({ ...form, price: +e.target.value })} /></div>
-            <div className="space-y-2"><Label>מרכיבים</Label><Textarea value={form.ingredients ?? ""} onChange={(e) => setForm({ ...form, ingredients: e.target.value })} /></div>
-            <div className="space-y-2"><Label>קישור לתמונה</Label><Input value={form.imageUrl || ""} onChange={(e) => setForm({ ...form, imageUrl: e.target.value })} /></div>
-            <div className="space-y-2">
+            <div className="space-y-1.5"><Label>שם</Label><Input value={form.name || ""} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
+            <div className="space-y-1.5"><Label>תיאור</Label><Textarea value={form.description || ""} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
+            <div className="space-y-1.5"><Label>מחיר</Label><Input type="number" value={form.price ?? 0} onChange={(e) => setForm({ ...form, price: +e.target.value })} /></div>
+            <div className="space-y-1.5"><Label>מרכיבים</Label><Textarea value={form.ingredients ?? ""} onChange={(e) => setForm({ ...form, ingredients: e.target.value })} /></div>
+            <div className="space-y-1.5"><Label>קישור לתמונה</Label><Input value={form.imageUrl || ""} onChange={(e) => setForm({ ...form, imageUrl: e.target.value })} /></div>
+            <div className="space-y-1.5">
               <Label>קטגוריה</Label>
-              <Select
-                value={form.category?.categoryCode ? String(form.category.categoryCode) : ""}
-                onValueChange={(v) => {
-                  const cat = cats.find((c) => c.categoryCode === +v);
-                  setForm({ ...form, category: cat ?? null });
-                }}
-              >
+              <Select value={form.category?.categoryCode ? String(form.category.categoryCode) : ""} onValueChange={(v) => {
+                  const cat = cats.find((c) => c.categoryCode === +v); setForm({ ...form, category: cat ?? null });
+                }}>
                 <SelectTrigger><SelectValue placeholder="בחר קטגוריה" /></SelectTrigger>
-                <SelectContent>
-                  {cats.map((c) => (
-                    <SelectItem key={c.categoryCode} value={String(c.categoryCode)}>{c.name}</SelectItem>
-                  ))}
-                </SelectContent>
+                <SelectContent>{cats.map((c) => (<SelectItem key={c.categoryCode} value={String(c.categoryCode)}>{c.name}</SelectItem>))}</SelectContent>
               </Select>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 pt-2">
               <Switch checked={!!form.isActive} onCheckedChange={(v) => setForm({ ...form, isActive: v })} />
               <Label>זמין למכירה</Label>
             </div>
           </div>
-          <DialogFooter>
-            <Button onClick={save} className="bg-espresso">שמירה</Button>
-          </DialogFooter>
+          <DialogFooter><Button onClick={save} className="bg-espresso w-full mt-4 sm:w-auto">שמירה</Button></DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {detailsCake && (
-        <CakeDetailsModal
-          cake={detailsCake}
-          open={!!detailsCake}
-          onOpenChange={(o) => !o && setDetailsCake(null)}
-        />
-      )}
-
+      {detailsCake && <CakeDetailsModal cake={detailsCake} open={!!detailsCake} onOpenChange={(o) => !o && setDetailsCake(null)} />}
       <AlertDialog open={delId !== null} onOpenChange={(o) => !o && setDelId(null)}>
-        <AlertDialogContent dir="rtl">
+        <AlertDialogContent dir="rtl" className="w-[90vw] sm:max-w-md">
           <AlertDialogHeader>
             <AlertDialogTitle>למחוק עוגה?</AlertDialogTitle>
             <AlertDialogDescription>הפעולה אינה הפיכה.</AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>ביטול</AlertDialogCancel>
+          <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+            <AlertDialogCancel className="mt-0">ביטול</AlertDialogCancel>
             <AlertDialogAction onClick={confirmDelete} className="bg-destructive">מחיקה</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

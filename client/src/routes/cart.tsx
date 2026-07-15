@@ -5,7 +5,6 @@ import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-// הוספתי כאן את האייקון ArrowRight עבור כפתור החזרה
 import { Trash2, ShoppingBag, Loader2, MessageCircle, CheckCircle, ArrowRight } from "lucide-react";
 import { orderService } from "@/services/orderService";
 import { extractError } from "@/lib/api";
@@ -38,7 +37,6 @@ function CartPage() {
       const today = new Date().toISOString().slice(0, 10);
       const delivery = new Date(Date.now() + 3 * 86400000).toISOString().slice(0, 10);
       
-      // יצירת ההזמנה בשרת עם הסטטוס החדש שמעיד שההזמנה ממתינה לתשלום
       const newOrder = await orderService.add({
         orderDate: today,
         deliveryDate: delivery,
@@ -46,7 +44,6 @@ function CartPage() {
         notes: "הזמנה נשמרה - ממתינה לתשלום דרך וואטסאפ"
       });
 
-      // שומרים את פרטי ההזמנה כדי להציג במסך התודה
       setCompletedOrder({ 
         id: newOrder.orderCode || newOrder.id, 
         total: total,
@@ -63,11 +60,8 @@ function CartPage() {
     }
   };
 
-  // -----------------------------------------------------
-  // מסך "תודה רבה" - מעוצב בדיוק בסגנון המקורי של האתר שלך!
-  // -----------------------------------------------------
   if (completedOrder) {
-    const businessPhone = "972504709484"; // ⚠️ חמספר האמיתי של הלקוחה (ללא 0 בהתחלה וללא פלוס)
+    const businessPhone = "972504709484";
     let orderDetails = "";
     completedOrder.items.forEach(item => {
       orderDetails += `- ${item.cake.name} (כמות: ${item.quantity})\n`;
@@ -131,17 +125,16 @@ function CartPage() {
     <PublicShell>
       <section className="container mx-auto px-4 py-12 max-w-4xl">
         
-        {/* הוספתי כאן את הכפתור "להמשך קנייה" ליד הכותרת */}
         <div className="flex items-center justify-between mb-8">
-          <h1 className="font-display text-4xl font-bold text-espresso flex items-center gap-3">
-            <ShoppingBag className="h-8 w-8 text-gold" /> הסל שלי
+          <h1 className="font-display text-2xl sm:text-4xl font-bold text-espresso flex items-center gap-2 sm:gap-3">
+            <ShoppingBag className="h-6 w-6 sm:h-8 sm:w-8 text-gold" /> הסל שלי
           </h1>
           <Button 
             variant="outline" 
             onClick={() => navigate({ to: "/" })}
-            className="border-gold/50 text-espresso hover:bg-gold/10 transition-colors"
+            className="border-gold/50 text-espresso hover:bg-gold/10 transition-colors text-sm sm:text-base px-3 sm:px-4"
           >
-            <ArrowRight className="mr-2 h-4 w-4" /> להמשך קנייה
+            <ArrowRight className="mr-1 sm:mr-2 h-4 w-4" /> <span className="hidden sm:inline">להמשך קנייה</span><span className="sm:hidden">חזור</span>
           </Button>
         </div>
 
@@ -154,28 +147,33 @@ function CartPage() {
         ) : (
           <div className="space-y-4">
             {items.map((item) => (
-              <Card key={item.code} className="p-4 flex items-center gap-4">
-                <img
-                  src={item.cake.imageUrl || "https://placehold.co/100x100?text=No+Image"} 
-                  alt={item.cake.name}
-                  className="h-20 w-20 rounded-lg object-cover bg-muted"
-                  onError={(e) => { e.currentTarget.src = "https://placehold.co/100x100?text=No+Image"; }}
-                />
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-espresso truncate">{item.cake.name}</h3>
-                  <p className="text-sm text-muted-foreground">כמות: {item.quantity}</p>
+              <Card key={item.code} className="p-4 flex flex-col sm:flex-row items-start sm:items-center gap-4 transition-all">
+                <div className="flex items-center gap-4 w-full sm:w-auto flex-1">
+                  <img
+                    src={item.cake.imageUrl || "https://placehold.co/100x100?text=No+Image"} 
+                    alt={item.cake.name}
+                    className="h-16 w-16 sm:h-20 sm:w-20 rounded-lg object-cover bg-muted shrink-0"
+                    onError={(e) => { e.currentTarget.src = "https://placehold.co/100x100?text=No+Image"; }}
+                  />
+                  <div className="flex-1 min-w-0 pr-2">
+                    <h3 className="font-semibold text-espresso truncate text-base sm:text-lg">{item.cake.name}</h3>
+                    <p className="text-sm text-muted-foreground">כמות: {item.quantity}</p>
+                  </div>
                 </div>
-                <div className="text-gold font-bold whitespace-nowrap">
-                  ₪{(item.cake.price * item.quantity).toFixed(2)}
+                
+                <div className="flex items-center justify-between w-full sm:w-auto sm:justify-end mt-2 sm:mt-0 pt-3 sm:pt-0 border-t sm:border-t-0 border-border/50 gap-4">
+                  <div className="text-gold font-bold whitespace-nowrap text-lg">
+                    ₪{(item.cake.price * item.quantity).toFixed(2)}
+                  </div>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => remove(item.cake.id)}
+                    className="text-destructive hover:bg-destructive/10"
+                  >
+                    <Trash2 className="h-5 w-5" />
+                  </Button>
                 </div>
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  onClick={() => remove(item.cake.id)}
-                  className="text-destructive"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
               </Card>
             ))}
 

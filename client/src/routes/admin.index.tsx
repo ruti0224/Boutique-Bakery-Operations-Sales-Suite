@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
-import { Cake, ListOrdered, Users, Wallet, Clock, CheckCircle2, Package, Truck, XCircle, CheckCircle, XOctagon } from "lucide-react";
+import { Cake, ListOrdered, Users, Wallet, Clock, CheckCircle2, Package, Truck, XCircle, CheckCircle, XOctagon, ChevronDown } from "lucide-react";
 import { cakeService } from "@/services/cakeService";
 import { orderService } from "@/services/orderService";
 import { userService } from "@/services/userService";
@@ -20,6 +20,7 @@ function AdminOverview() {
   });
 
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
+  const [expandedCard, setExpandedCard] = useState<string | null>(null);
 
   useEffect(() => {
     Promise.allSettled([
@@ -57,11 +58,12 @@ function AdminOverview() {
     });
   }, []);
 
+  // הוספתי משתנה חדש: hasLink. רק מי שמוגדר כ-true יהיה כפתור לחיץ!
   const mainCards = [
-    { id: "cakes", label: "עוגות", value: stats.cakes.total, icon: Cake },
-    { id: "orders", label: "הזמנות", value: stats.orders.total, icon: ListOrdered },
-    { id: "users", label: "משתמשים", value: stats.users, icon: Users },
-    { id: "revenue", label: 'סה״כ הכנסות', value: `₪${stats.revenue.total.toFixed(0)}`, icon: Wallet },
+    { id: "cakes", label: "עוגות", value: stats.cakes.total, icon: Cake, hasLink: true },
+    { id: "orders", label: "הזמנות", value: stats.orders.total, icon: ListOrdered, hasLink: true },
+    { id: "users", label: "משתמשים", value: stats.users, icon: Users, hasLink: true },
+    { id: "revenue", label: 'סה״כ הכנסות', value: `₪${stats.revenue.total.toFixed(0)}`, icon: Wallet, hasLink: false },
   ];
 
   const detailsMap: Record<string, any[]> = {
@@ -89,56 +91,74 @@ function AdminOverview() {
     <div className="space-y-8">
       <h1 className="font-display text-3xl font-bold text-espresso mb-4">סקירה כללית</h1>
       
-      {/* מגדירים items-start כדי שפתיחת אזור אחד לא תמתח את שאר העמודות */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-start">
-        {mainCards.map((c) => (
-          <div 
-            key={c.id}
-            className="flex flex-col gap-3"
-            onMouseEnter={() => setHoveredCard(c.id)}
-            onMouseLeave={() => setHoveredCard(null)}
-          >
-            {/* הכרטיס הראשי */}
-            <Card 
-              className="p-6 shadow-elegant cursor-pointer hover:border-gold/50 transition-colors"
-              onClick={() => navigate({ to: `/admin/${c.id === 'revenue' ? 'payments' : c.id}` })}
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">{c.label}</p>
-                  <p className="text-3xl font-bold text-espresso mt-1">{c.value}</p>
-                </div>
-                <c.icon className="h-10 w-10 text-gold/60" />
-              </div>
-            </Card>
+        {mainCards.map((c) => {
+          const isExpanded = hoveredCard === c.id || expandedCard === c.id;
 
-            {/* אזור הפירוט שמופיע בדיוק מתחת לכרטיס הזה */}
+          return (
             <div 
-              className={`transition-all duration-500 overflow-hidden ${
-                hoveredCard === c.id ? 'max-h-[800px] opacity-100' : 'max-h-0 opacity-0'
-              }`}
+              key={c.id}
+              className="flex flex-col gap-3"
+              onMouseEnter={() => setHoveredCard(c.id)}
+              onMouseLeave={() => setHoveredCard(null)}
             >
-              <div className="grid grid-cols-2 gap-2 pb-2">
-                {detailsMap[c.id].map((detail, index) => {
-                  // אם יש מספר אי-זוגי של פריטים (כמו 5), הפריט האחרון יתפרס על שתי העמודות
-                  const isLastOdd = detailsMap[c.id].length % 2 !== 0 && index === detailsMap[c.id].length - 1;
-                  
-                  return (
-                    <Card 
-                      key={index} 
-                      className={`p-3 bg-card/60 shadow-sm border-border/50 flex flex-col items-center justify-center text-center gap-1 ${isLastOdd ? 'col-span-2' : ''}`}
-                    >
-                      <detail.icon className={`h-6 w-6 ${detail.color}`} />
-                      <p className="text-xs font-medium text-muted-foreground mt-1">{detail.label}</p>
-                      <p className="text-xl font-bold text-espresso">{detail.value}</p>
-                    </Card>
-                  );
-                })}
+              <Card className="p-0 shadow-elegant overflow-hidden transition-colors border border-border/50 hover:border-gold/50 flex items-stretch">
+                {/* כאן הוספתי תנאי: אם hasLink שווה true, זה לחיץ ויהיה אפקט מעבר צבע. אם false, זה רק טקסט רגיל */}
+                <div 
+                  className={`flex-1 p-6 ${c.hasLink ? 'cursor-pointer hover:bg-secondary/20 transition-colors' : ''}`}
+                  onClick={() => {
+                    if (c.hasLink) {
+                      navigate({ to: `/admin/${c.id}` });
+                    }
+                  }}
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground">{c.label}</p>
+                      <p className="text-3xl font-bold text-espresso mt-1">{c.value}</p>
+                    </div>
+                    <c.icon className="h-10 w-10 text-gold/60" />
+                  </div>
+                </div>
+
+                <div 
+                  className="w-14 border-r border-border/50 flex items-center justify-center cursor-pointer hover:bg-secondary/60 bg-secondary/20 transition-colors"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setExpandedCard(expandedCard === c.id ? null : c.id);
+                  }}
+                  aria-label="פתח פירוט"
+                >
+                  <ChevronDown className={`h-6 w-6 text-muted-foreground transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
+                </div>
+              </Card>
+
+              <div 
+                className={`transition-all duration-500 overflow-hidden ${
+                  isExpanded ? 'max-h-[800px] opacity-100' : 'max-h-0 opacity-0'
+                }`}
+              >
+                <div className="grid grid-cols-2 gap-2 pb-2">
+                  {detailsMap[c.id].map((detail, index) => {
+                    const isLastOdd = detailsMap[c.id].length % 2 !== 0 && index === detailsMap[c.id].length - 1;
+                    
+                    return (
+                      <Card 
+                        key={index} 
+                        className={`p-3 bg-card/60 shadow-sm border-border/50 flex flex-col items-center justify-center text-center gap-1 ${isLastOdd ? 'col-span-2' : ''}`}
+                      >
+                        <detail.icon className={`h-6 w-6 ${detail.color}`} />
+                        <p className="text-xs font-medium text-muted-foreground mt-1">{detail.label}</p>
+                        <p className="text-xl font-bold text-espresso">{detail.value}</p>
+                      </Card>
+                    );
+                  })}
+                </div>
               </div>
+              
             </div>
-            
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

@@ -2,6 +2,8 @@ package com.example.cakesmenagement.Service;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -14,11 +16,12 @@ public class EmailService {
 
     @Autowired
     private JavaMailSender mailSender;
-
+    private static final Logger logger = LoggerFactory.getLogger(EmailService.class);
 
     @Async
     public void sendEmail(String to, String subject, String htmlContent) {
         try {
+            logger.info("מתחיל ניסיון שליחת מייל אל: {}", to);
             MimeMessage message = mailSender.createMimeMessage();
             // שים לב: true = multipart, חובה לתמונות מוטמעות
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
@@ -27,16 +30,17 @@ public class EmailService {
             helper.setFrom("sweets.bakery.info@gmail.com", "Sweets קונדיטוריה בוטיק");
             helper.setText(htmlContent, true);
 
-            ClassPathResource logo = new ClassPathResource("static/logo (2).png");
+            ClassPathResource logo = new ClassPathResource("static/logo.png");
             helper.addInline("logoImage", logo);
 
             mailSender.send(message);
+            logger.info("המייל נשלח בהצלחה אל: {}", to);
         } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException("שגיאה בקידוד שם השולח: " + e.getMessage(), e);
+            logger.error("שגיאה בקידוד שם השולח: ", e);
         } catch (MessagingException e) {
-            throw new RuntimeException("שגיאה בשליחת המייל: " + e.getMessage(), e);
-        } catch (RuntimeException e) {
-            throw new RuntimeException("שגיאה באימות מול שרת המייל: " + e.getMessage(), e);
+            logger.error("שגיאה בהרכבת או שליחת המייל (MessagingException): ", e);
+        } catch (Exception e) {
+            logger.error("שגיאה כללית בשליחת מייל מול שרת Brevo: ", e);
         }
     }
 

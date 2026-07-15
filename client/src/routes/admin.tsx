@@ -1,80 +1,69 @@
-import { createFileRoute, Link, Outlet, redirect, useRouterState } from "@tanstack/react-router";
-import { useAuth } from "@/context/AuthContext";
-import { Cake, ChartLine, Folder, ListOrdered, LogOut, Users } from "lucide-react";
+import { createFileRoute, Link, Outlet, useNavigate } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
-import logo from "@/assets/logo.png";
+import { LayoutDashboard, Cake, Tags, ListOrdered, Users, Home } from "lucide-react";
 
 export const Route = createFileRoute("/admin")({
   component: AdminLayout,
 });
 
-const NAV: { to: string; label: string; icon: any; exact?: boolean }[] = [
-  { to: "/admin", label: "סקירה", icon: ChartLine, exact: true },
-  { to: "/admin/cakes", label: "ניהול עוגות", icon: Cake },
-  { to: "/admin/categories", label: "קטגוריות", icon: Folder },
-  { to: "/admin/orders", label: "הזמנות", icon: ListOrdered },
-  { to: "/admin/users", label: "משתמשים", icon: Users },
-];
-
 function AdminLayout() {
-  const { isAuthenticated, isAdmin, logout, openAuth } = useAuth();
-  const path = useRouterState({ select: (s) => s.location.pathname });
-
-  if (!isAuthenticated) {
-    if (typeof window !== "undefined") openAuth();
-    return (
-      <div className="min-h-screen flex items-center justify-center" dir="rtl">
-        <p className="text-muted-foreground">נדרשת התחברות</p>
-      </div>
-    );
-  }
-
-  if (!isAdmin) {
-    return (
-      <div className="min-h-screen flex items-center justify-center" dir="rtl">
-        <p className="text-muted-foreground">גישה מוגבלת למנהלים בלבד</p>
-      </div>
-    );
-  }
+  const navigate = useNavigate();
+  
+  // הסרתי מכאן את כפתור ה"תשלומים" (Wallet)
+  const navItems = [
+    { to: "/admin", label: "סקירה", icon: LayoutDashboard },
+    { to: "/admin/cakes", label: "עוגות", icon: Cake },
+    { to: "/admin/categories", label: "קטגוריות", icon: Tags },
+    { to: "/admin/orders", label: "הזמנות", icon: ListOrdered },
+    { to: "/admin/users", label: "משתמשים", icon: Users },
+  ];
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row bg-background">
-      <aside className="md:w-64 md:min-h-screen border-l border-border/60 bg-sidebar flex md:flex-col">
-        <div className="p-6 border-b border-border/40 hidden md:block">
-          <Link to="/" className="block">
-            <img
-              src={logo}
-              alt="לוגו"
-              className="h-20 w-auto object-contain"
-            />
-            <p className="text-xs text-muted-foreground mt-1">פאנל ניהול</p>
-          </Link>
-        </div>
-        <nav className="flex md:flex-col gap-1 p-3 flex-1 overflow-x-auto">
-          {NAV.map((item) => {
-            const active = item.exact ? path === item.to : path.startsWith(item.to);
-            return (
+    <div className="min-h-screen bg-background dir-rtl overflow-x-hidden max-w-[100vw] w-full">
+      <div className="bg-white text-espresso border-b border-border shadow-sm sticky top-0 z-50 py-3 px-3 sm:px-4 w-full">
+        <div className="container mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 w-full max-w-full">
+          
+          <div className="flex items-center justify-between w-full sm:w-auto border-b sm:border-0 border-border/50 pb-3 sm:pb-0 gap-2">
+            <div className="font-display text-xl sm:text-2xl font-bold text-gold flex items-center gap-2 truncate min-w-0">
+              ניהול המערכת
+            </div>
+            
+            <Button 
+              variant="outline" 
+              className="sm:hidden border-gold text-gold hover:bg-gold hover:text-espresso flex items-center gap-1.5 h-9 px-2.5 text-sm transition-colors shrink-0"
+              onClick={() => navigate({ to: "/" })}
+            >
+              <Home className="h-4 w-4" /> לאתר
+            </Button>
+          </div>
+
+          <nav className="flex flex-wrap justify-center sm:justify-start gap-1 sm:gap-2 w-full sm:w-auto">
+            {navItems.map((item) => (
               <Link
                 key={item.to}
-                to={item.to as any}
-                className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition whitespace-nowrap ${active
-                    ? "bg-espresso text-primary-foreground shadow"
-                    : "text-foreground hover:bg-accent/40"
-                  }`}
+                to={item.to}
+                activeProps={{ className: "bg-gold text-espresso font-bold shadow-sm" }}
+                className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-2 rounded-md transition-all hover:bg-secondary text-sm sm:text-base font-medium"
+                activeOptions={item.to === "/admin" ? { exact: true } : { exact: false }}
               >
-                <item.icon className="h-4 w-4" />
-                {item.label}
+                <item.icon className="h-4 w-4 shrink-0" />
+                <span>{item.label}</span>
               </Link>
-            );
-          })}
-        </nav>
-        <div className="p-3 border-t border-border/40 hidden md:block">
-          <Button variant="ghost" className="w-full justify-start text-destructive" onClick={logout}>
-            <LogOut className="ml-2 h-4 w-4" /> התנתקות
+            ))}
+          </nav>
+
+          <Button 
+            variant="outline" 
+            className="hidden sm:flex border-gold text-gold hover:bg-gold hover:text-espresso flex-items-center gap-2 transition-colors shrink-0"
+            onClick={() => navigate({ to: "/" })}
+          >
+            <Home className="h-4 w-4" /> חזרה לאתר הראשי
           </Button>
+
         </div>
-      </aside>
-      <main className="flex-1 min-w-0 p-4 md:p-8">
+      </div>
+
+      <main className="container mx-auto p-3 sm:p-6 lg:p-8 w-full max-w-full overflow-hidden">
         <Outlet />
       </main>
     </div>

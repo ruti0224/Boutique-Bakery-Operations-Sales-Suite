@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import type { Cake } from "@/types";
 import { Card } from "@/components/ui/card";
@@ -20,7 +20,19 @@ export function CakeCard({ cake }: Props) {
   const { add, remove, quantityOf } = useCart();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
+  
+  // ניהול מצב הכפתור לטלפון (הופעה ל-5 שניות)
+  const [showCartBtn, setShowCartBtn] = useState(false);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  
   const qty = quantityOf(cake.id);
+
+  // ניקוי הטיימר במקרה שהרכיב נעלם
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, []);
 
   const handleAdd = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -29,7 +41,15 @@ export function CakeCard({ cake }: Props) {
       return;
     }
     add(cake);
+    
+    // מפעיל את כפתור "מעבר לעגלה" ל-5 שניות בדיוק
+    setShowCartBtn(true);
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => {
+      setShowCartBtn(false);
+    }, 5000);
   };
+  
   const handleRemove = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!isAuthenticated) {
@@ -95,9 +115,11 @@ export function CakeCard({ cake }: Props) {
               </Button>
             </div>
             
-            {/* התיקון כאן: האפקט מבוסס אך ורק על group-hover כדי להבטיח היעלמות מיידית ביציאת העכבר */}
+            {/* הכפתור משתמש עכשיו גם במצב Hover למחשב וגם במשתנה ה-5 שניות לטלפון! */}
             {qty > 0 && (
-              <div className="overflow-hidden transition-all duration-300 max-h-0 opacity-0 group-hover:max-h-12 group-hover:opacity-100 group-hover:mt-3">
+              <div className={`overflow-hidden transition-all duration-300 ${
+                showCartBtn ? 'max-h-12 opacity-100 mt-3' : 'max-h-0 opacity-0 group-hover:max-h-12 group-hover:opacity-100 group-hover:mt-3'
+              }`}>
                 <Button 
                   onClick={(e) => {
                     e.stopPropagation();

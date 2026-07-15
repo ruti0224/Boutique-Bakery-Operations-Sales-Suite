@@ -42,6 +42,20 @@ export function Header() {
                   <DropdownMenuItem onSelect={() => navigate({ to: "/profile" })}>
                     <UserIcon className="ml-2 h-4 w-4" /> עדכון פרופיל
                   </DropdownMenuItem>
+
+                  {/* חדש: מופיע רק בנייד, כי בדסקטופ יש כפתורים בשורת הניווט */}
+                  <DropdownMenuItem onSelect={() => navigate({ to: "/cart" })} className="sm:hidden">
+                    <ShoppingBag className="ml-2 h-4 w-4" /> הסל שלי
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => navigate({ to: "/orders" })} className="sm:hidden">
+                    <Package className="ml-2 h-4 w-4" /> ההזמנות שלי
+                  </DropdownMenuItem>
+                  {isAdmin && (
+                    <DropdownMenuItem onSelect={() => navigate({ to: "/admin" })} className="sm:hidden">
+                      <LayoutGrid className="ml-2 h-4 w-4" /> פאנל ניהול
+                    </DropdownMenuItem>
+                  )}
+
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onSelect={logout} className="text-destructive">
                     <LogOut className="ml-2 h-4 w-4" /> התנתקות
@@ -52,24 +66,24 @@ export function Header() {
               {/* Navigation Links inside Header bar */}
               <div className="hidden sm:flex items-center gap-1">
                 {isAdmin && (
-                  <Button 
-                    variant="ghost" 
-                    onClick={() => navigate({ to: "/admin" })} 
+                  <Button
+                    variant="ghost"
+                    onClick={() => navigate({ to: "/admin" })}
                     className="text-espresso hover:text-gold hover:bg-gold/10 font-semibold"
                   >
                     <LayoutGrid className="ml-2 h-4 w-4" /> פאנל ניהול
                   </Button>
                 )}
-                <Button 
-                  variant="ghost" 
-                  onClick={() => navigate({ to: "/cart" })} 
+                <Button
+                  variant="ghost"
+                  onClick={() => navigate({ to: "/cart" })}
                   className="text-espresso hover:text-gold hover:bg-gold/10"
                 >
                   <ShoppingBag className="ml-2 h-4 w-4" /> הסל שלי
                 </Button>
-                <Button 
-                  variant="ghost" 
-                  onClick={() => navigate({ to: "/orders" })} 
+                <Button
+                  variant="ghost"
+                  onClick={() => navigate({ to: "/orders" })}
                   className="text-espresso hover:text-gold hover:bg-gold/10"
                 >
                   <Package className="ml-2 h-4 w-4" /> ההזמנות שלי
