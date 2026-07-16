@@ -14,21 +14,41 @@ import java.util.Date;
 @Component
 public class JwtUtil {
 
-    // 🔑 מפתח סודי לחתימה על הטוקן - כעת נטען בצורה קבועה
     private final SecretKey key;
 
-    // הזרקת המחרוזת מ-application.properties והפיכתה למפתח הצפנה בזמן עליית השרת
+    // זמני תפוגה (ניתן לשנות במידת הצורך)
+    private static final long ACCESS_TOKEN_VALIDITY = 15 * 60 * 1000; // 15 דקות
+    private static final long REFRESH_TOKEN_VALIDITY = 7L * 24 * 60 * 60 * 1000; // 7 ימים
+
     public JwtUtil(@Value("${jwt.secret}") String secretString) {
-        this.key = Keys.hmacShaKeyFor(secretString.getBytes(StandardCharsets.UTF_8));
+        if (secretString == null || secretString.trim().isEmpty()) {
+            throw new IllegalStateException("FATAL: JWT Secret key is missing!");
+        }
+        byte[] secretBytes = secretString.getBytes(StandardCharsets.UTF_8);
+        if (secretBytes.length < 32) {
+            throw new IllegalStateException("FATAL: JWT Secret key is too weak! Must be at least 32 bytes.");
+        }
+        this.key = Keys.hmacShaKeyFor(secretBytes);
     }
 
-    public String generateToken(String email, String role, int userId) {
+    // יצירת Access Token (קצר מועד)
+    public String generateAccessToken(String email, String role, int userId) {
         return Jwts.builder()
                 .setSubject(email)
                 .claim("role", role)
                 .claim("userId", userId)
-                .setIssuedAt(new Date())            // תאריך יצירה
-                .setExpiration(new Date(System.currentTimeMillis() + 13*1000 * 60 * 60)) // תוקף - כפי שהגדרת (13 שעות)
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + ACCESS_TOKEN_VALIDITY))
+                .signWith(key, SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    // יצירת Refresh Token (ארוך מועד, ללא תפקיד ומזהה כדי להקטין סיכון)
+    public String generateRefreshToken(String email) {
+        return Jwts.builder()
+                .setSubject(email)
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + REFRESH_TOKEN_VALIDITY))
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }

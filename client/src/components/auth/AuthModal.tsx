@@ -109,7 +109,7 @@ export function AuthModal() {
   };
 
   return (
-    <GoogleOAuthProvider clientId="314706987398-npml3p0mgbnq08bp09921gl2rqkgmd73.apps.googleusercontent.com">
+    <GoogleOAuthProvider clientId="324402577462-7rupocdbchrjaqdts1g54hih7opc845l.apps.googleusercontent.com">
       <Dialog open={authOpen} onOpenChange={(o) => !o && closeAuth()}>
         <DialogContent className="sm:max-w-md" dir="rtl">
           <DialogHeader>

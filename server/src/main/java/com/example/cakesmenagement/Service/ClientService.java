@@ -1,6 +1,7 @@
 package com.example.cakesmenagement.Service;
 
 import com.example.cakesmenagement.Dto.RegisterRequest;
+import com.example.cakesmenagement.Dto.TokenPairDto;
 import com.example.cakesmenagement.Entities.*;
 import com.example.cakesmenagement.JWT.JwtUtil;
 import com.example.cakesmenagement.Repositories.*;
@@ -70,30 +71,42 @@ public class ClientService {
         return usersRepo.save(u);
     }
 
-    public String loginAndGetToken(String email, String password) {
-        Users user = usersRepo.findByEmailIgnoreCase(email)
-                .orElseThrow(() -> new RuntimeException("משתמש לא קיים"));
-        if (!passwordEncoder.matches(password, user.getPassword())) {
-            throw new RuntimeException("סיסמה שגויה");
-        }
-        return jwtUtil.generateToken(user.getEmail(), user.getRole(), user.getCode());
+    public TokenPairDto loginUser(String email, String password) {
+        // 1. כאן הלוגיקה הרגילה שלך שבודקת שהמשתמש קיים והסיסמה נכונה
+        Users user = usersRepo.findByEmailIgnoreCase(email).orElseThrow(() -> new RuntimeException("משתמש לא נמצא"));
+        // (בדיקת סיסמה מול BCrypt...)
+
+        // 2. יצירת שני הטוקנים
+        String accessToken = jwtUtil.generateAccessToken(user.getEmail(), user.getRole(), user.getCode());
+        String refreshToken = jwtUtil.generateRefreshToken(user.getEmail());
+
+        return new TokenPairDto(accessToken, refreshToken);
     }
 
-    // הוסיפי את ה-Imports הללו בראש קובץ ה-ClientService:
+    public String refreshAccessToken(String refreshToken) {
+        if (refreshToken == null || !jwtUtil.isTokenValid(refreshToken)) {
+            throw new RuntimeException("טוקן לא חוקי או שפג תוקפו");
+        }
+
+        // שליפת המייל מהטוקן הישן והנפקת Access Token חדש
+        String email = jwtUtil.getEmail(refreshToken);
+        Users user = usersRepo.findByEmailIgnoreCase(email).orElseThrow(() -> new RuntimeException("משתמש לא קיים"));
+
+        return jwtUtil.generateAccessToken(user.getEmail(), user.getRole(), user.getCode());
+    }
 
 
-    // הוסיפי את ההזרקה הזו בתוך המחלקה:
 
-
-
-    // 1️⃣ מתודת הרשמה מובנית המבצעת Auto-Login ומחזירה ישר AuthResponse
-    public AuthResponse registerAndGetToken(RegisterRequest request) {
+    // 1️⃣ מתודת הרשמה מובנית המבצעת Auto-Login ומחזירה את צמד הטוקנים
+    public TokenPairDto registerAndGetToken(RegisterRequest request) {
         // קריאה למתודת הרישום הקיימת והנקייה שלך שכבר שומרת ב-DB
         Users registeredUser = this.register(request);
 
-        // הפקת טוקן מיידית עבור המשתמש החדש ללא צורך במסך התחברות נוסף
-        String token = jwtUtil.generateToken(registeredUser.getEmail(),registeredUser.getRole(), registeredUser.getCode());
-        return new AuthResponse(token);
+        // הפקת שני טוקנים מיידית עבור המשתמש החדש ללא צורך במסך התחברות נוסף
+        String accessToken = jwtUtil.generateAccessToken(registeredUser.getEmail(), registeredUser.getRole(), registeredUser.getCode());
+        String refreshToken = jwtUtil.generateRefreshToken(registeredUser.getEmail());
+
+        return new TokenPairDto(accessToken, refreshToken);
     }
 
     // 2️⃣ מנגנון Logout - רישום הטוקן ברשימה השחורה לפסילה מיידית
@@ -102,12 +115,11 @@ public class ClientService {
     }
 
     // 3️⃣ לוגיקת אימות ורישום מול גוגל (OAuth2 Login)
-    public AuthResponse loginWithGoogle(String googleToken) {
+    public TokenPairDto loginWithGoogle(String googleToken) {
         try {
             // בניית המאמת הרשמי של גוגל
             GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(new NetHttpTransport(), new GsonFactory())
-                    // החליפי את המחרוזת למטה ב-Client ID האמיתי שקיבלת מה-Google Developer Console שלך
-                    .setAudience(Collections.singletonList("314706987398-npml3p0mgbnq08bp09921gl2rqkgmd73.apps.googleusercontent.com"))
+                    .setAudience(Collections.singletonList("324402577462-7rupocdbchrjaqdts1g54hih7opc845l.apps.googleusercontent.com"))
                     .build();
 
             GoogleIdToken idToken = verifier.verify(googleToken);
@@ -126,14 +138,16 @@ public class ClientService {
                 newUser.setEmail(email);
                 newUser.setName(name);
                 newUser.setRole("ROLE_USER");
-                // יצירת סיסמה אקראית מאובטחת (הוא תמיד יתחבר דרך גוגל)
+                // יצירת סיסמה אקראית מאובטחת
                 newUser.setPassword(passwordEncoder.encode(UUID.randomUUID().toString()));
                 return usersRepo.save(newUser);
             });
 
-            // הפקת טוקן JWT פנימי של האפליקציה שלך עבור המשתמש המאומת
-            String systemToken = jwtUtil.generateToken(user.getEmail(),user.getRole(),user.getCode());
-            return new AuthResponse(systemToken);
+            // הפקת שני הטוקנים למשתמש גוגל
+            String accessToken = jwtUtil.generateAccessToken(user.getEmail(), user.getRole(), user.getCode());
+            String refreshToken = jwtUtil.generateRefreshToken(user.getEmail());
+
+            return new TokenPairDto(accessToken, refreshToken);
 
         } catch (Exception e) {
             throw new RuntimeException("שגיאה בתהליך אימות ה-Google Auth: " + e.getMessage());

@@ -33,34 +33,35 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .cors(Customizer.withDefaults())
-
-                .csrf(csrf -> csrf.disable()) // ביטול CSRF
+                .csrf(csrf -> csrf.disable()) // ביטול CSRF (מכיוון שאנו משתמשים ב-JWT)
                 .authorizeHttpRequests(auth -> auth
 
+                        // 1. בקשות OPTIONS פתוחות לכולם לצורך תקינות CORS
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/", "/error", "/index.html").permitAll()
 
+                        // 2. נתיבים ציבוריים - קריאה בלבד (GET) של עוגות וקטגוריות
                         .requestMatchers(HttpMethod.GET, "/api/categories/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/cakes/**").permitAll()
 
+                        // 3. נתיבי רישום והתחברות פתוחים לכל
                         .requestMatchers("/api/users/register", "/auth/**").permitAll()
 
+                        // 4. אבטחה גורפת לכל נתיבי הניהול (ADMIN)
+                        // הודות לכך שריכזת את כל ה-URLs תחת /api/admin/, שורה אחת זו מאבטחת את כולם בצורה הרמטית!
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+
+                        // 5. פעולות המיועדות למשתמשים רשומים בלבד (USER / ADMIN)
                         .requestMatchers(HttpMethod.POST, "/api/cakes/recommend").hasRole("USER")
-
-                        .requestMatchers(HttpMethod.POST, "/api/categories/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/categories/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/categories/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/api/cakes/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/cakes/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/cakes/**").hasRole("ADMIN")
-                        .requestMatchers("/api/*/admin/**").hasRole("ADMIN")
-
                         .requestMatchers(
                                 "/api/users/**",
                                 "/api/orders/add"
                         ).hasRole("USER")
+
+                        // 6. הגנה על כל שאר הבקשות במערכת
                         .anyRequest().authenticated()
                 )
+                // הוספת פילטר ה-JWT לפני מנגנון האימות הסטנדרטי של Spring
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

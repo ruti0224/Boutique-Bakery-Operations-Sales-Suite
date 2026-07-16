@@ -35,14 +35,6 @@ public class AdminService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    public String loginAndGetToken(String email, String password) {
-        Users user = usersRepo.findByEmailIgnoreCase(email)
-                .orElseThrow(() -> new RuntimeException("משתמש לא קיים"));
-        if (!passwordEncoder.matches(password, user.getPassword())) {
-            throw new RuntimeException("סיסמה שגויה");
-        }
-        return jwtUtil.generateToken(user.getEmail(), user.getRole(), user.getCode());
-    }
     public void deleteUser(int id) {
         Users user = usersRepo.findById(id)
                 .orElseThrow(()-> new RuntimeException("id not exist"));
