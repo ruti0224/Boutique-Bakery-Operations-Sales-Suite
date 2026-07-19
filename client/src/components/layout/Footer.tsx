@@ -1,4 +1,6 @@
 import logo from "@/assets/logo.png";
+import { Link } from "@tanstack/react-router";
+import { MessageCircle } from "lucide-react";
 
 export function Footer() {
   return (
@@ -12,6 +14,14 @@ export function Footer() {
           />
           <p className="text-muted-foreground text-sm font-medium">נאפה באהבה, לחוויה בלתי נשכחת.</p>
         </div>
+
+        <Link
+          to="/contact"
+          className="inline-flex items-center gap-2 text-espresso hover:text-gold transition-colors font-medium"
+        >
+          <MessageCircle className="h-4 w-4" />
+          צרו קשר
+        </Link>
       </div>
     </footer>
   );

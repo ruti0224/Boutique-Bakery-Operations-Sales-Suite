@@ -7,6 +7,7 @@ import com.example.cakesmenagement.JWT.JwtUtil;
 import com.example.cakesmenagement.Repositories.*;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -44,8 +45,6 @@ public class ClientService {
     @Autowired
     private CakesRepo cakeRepo;
     @Autowired
-    private PaymentsRepo paymentsRepo;
-    @Autowired
     private PasswordEncoder passwordEncoder;
     @Autowired
     private EmailService emailService;
@@ -56,7 +55,8 @@ public class ClientService {
 
     @Autowired
     private JwtUtil jwtUtil;
-
+    @Value("${app.frontend-url}")
+    private String frontendUrl;
     public Users register(RegisterRequest request) {
         rateLimitingService.checkRateLimit();
         if (usersRepo.existsByEmailIgnoreCase(request.getEmail())) {
@@ -72,14 +72,15 @@ public class ClientService {
     }
 
     public TokenPairDto loginUser(String email, String password) {
-        // 1. כאן הלוגיקה הרגילה שלך שבודקת שהמשתמש קיים והסיסמה נכונה
-        Users user = usersRepo.findByEmailIgnoreCase(email).orElseThrow(() -> new RuntimeException("משתמש לא נמצא"));
-        // (בדיקת סיסמה מול BCrypt...)
+        rateLimitingService.checkRateLimit();
+        Users user = usersRepo.findByEmailIgnoreCase(email).orElseThrow(() -> new RuntimeException("אימייל או סיסמה שגויים"));
 
-        // 2. יצירת שני הטוקנים
+        if (!passwordEncoder.matches(password, user.getPassword())) {
+            throw new RuntimeException("אימייל או סיסמה שגויים");
+        }
+
         String accessToken = jwtUtil.generateAccessToken(user.getEmail(), user.getRole(), user.getCode());
         String refreshToken = jwtUtil.generateRefreshToken(user.getEmail());
-
         return new TokenPairDto(accessToken, refreshToken);
     }
 
@@ -208,33 +209,18 @@ public class ClientService {
     }
 
     public void generateResetToken(String email) {
-        // 1. מחפשים את המשתמש
-        Users user = usersRepo.findByEmailIgnoreCase(email)
-                .orElseThrow(() -> new RuntimeException("משתמש לא נמצא"));
-        if (user.getResetToken() != null &&
-                user.getResetTokenExpiry() != null &&
-                user.getResetTokenExpiry().isAfter(LocalDateTime.now())) {
-            throw new RuntimeException(
-                    "נשלח כבר קישור לאיפוס סיסמה. יש להמתין 15 דקות לפני שליחה נוספת."
-            );
-        }
-        // 2. מייצרים טוקן אקראי וייחודי
-        String token = UUID.randomUUID().toString();
-
-        // 3. שומרים במשתמש ונותנים תוקף של 15 דקות
-        user.setResetToken(token);
-        user.setResetTokenExpiry(LocalDateTime.now().plusMinutes(15));
-        usersRepo.save(user);
-
-        // הכתובת כאן היא הכתובת של צד הלקוח שלך
-        String resetLink = "http://localhost:8081/reset-password?token=" + token;
-
-        emailService.sendEmail(
-                email,
-                "איפוס סיסמה — Sweets",
-                emailService.buildResetPasswordEmail(resetLink)
-        );
-
+        usersRepo.findByEmailIgnoreCase(email).ifPresent(user -> {
+            if (user.getResetToken() != null && user.getResetTokenExpiry() != null
+                    && user.getResetTokenExpiry().isAfter(LocalDateTime.now())) {
+                return; // כבר נשלח קישור, לא שולחים שוב, אבל גם לא מגלים ללקוח
+            }
+            String token = UUID.randomUUID().toString();
+            user.setResetToken(token);
+            user.setResetTokenExpiry(LocalDateTime.now().plusMinutes(15));
+            usersRepo.save(user);
+            String resetLink = frontendUrl + "/reset-password?token=" + token;
+            emailService.sendEmail(email, "איפוס סיסמה — Sweets", emailService.buildResetPasswordEmail(resetLink));
+        });
     }
     public void resetPassword(String token, String newPassword) {
         // 1. מחפשים משתמש שיש לו בדיוק את הטוקן הזה
@@ -408,12 +394,7 @@ public class ClientService {
 
         return savedOrder;
     }
-    public Optional<Orders> getOrdersById(int userId) {
-        if (!usersRepo.existsById(userId))
-            throw new RuntimeException("id not exist");
-       Optional<Orders> order1= orderRepo.findById(userId);
-        return order1;
-    }
+
     public List<Cakes> getCakesByCategory(int categoryCode) {
         return cakeRepo.findByCategory_CategoryCode(categoryCode);
     }
@@ -426,26 +407,6 @@ public class ClientService {
         return lCakes;
     }
 
-    public Payments addPayment(Payments payment) {
-        Orders order = orderRepo.findById(payment.getOrder().getOrderCode())
-                .orElseThrow(() -> new RuntimeException("הזמנה לא קיימת"));
-
-        // בדיקת אבטחה קריטית! האם הסכום ששולם שווה לסכום ההזמנה?
-        if (payment.getAmount() != order.getTotalPrice()) {
-            throw new RuntimeException("אבטחה: סכום התשלום אינו תואם לסכום ההזמנה!");
-        }
-
-        payment.setOrder(order);
-        Payments savedPayment = paymentsRepo.save(payment);
-        order.setStatus(PAID);
-        orderRepo.save(order);
-
-        return savedPayment;
-    }
-    public Payments getPaymentById(int id) {
-        return paymentsRepo.findById(id)
-                .orElseThrow(() -> new RuntimeException("Payment not found"));
-    }
     public List<Categories> getAllCategories() {
         return categoryRepo.findAll();
     }

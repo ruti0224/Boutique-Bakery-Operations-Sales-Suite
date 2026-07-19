@@ -1,8 +1,7 @@
 import axios from "axios";
 
 const baseURL =
-  (typeof import.meta !== "undefined" && (import.meta as any).env?.VITE_API_BASE_URL) ||
-  "http://localhost:8080";
+  (typeof import.meta !== "undefined" && (import.meta as any).env?.VITE_API_BASE_URL) 
 
 export const api = axios.create({ baseURL });
 

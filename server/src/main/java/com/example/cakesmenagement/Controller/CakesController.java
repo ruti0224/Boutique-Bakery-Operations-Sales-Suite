@@ -4,9 +4,11 @@ import com.example.cakesmenagement.Dto.RecommendationRequest;
 import com.example.cakesmenagement.Entities.Cakes;
 import com.example.cakesmenagement.Service.AdminService;
 import com.example.cakesmenagement.Service.ClientService;
+import com.example.cakesmenagement.Service.CloudinaryService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -18,6 +20,9 @@ public class CakesController {
     private ClientService clientService;
     @Autowired
     private AdminService adminService;
+    @Autowired
+    private CloudinaryService cloudinaryService;
+
 
     @PostMapping("/admin/add")
     public Cakes addCake(@Valid  @RequestBody Cakes cake) {
@@ -49,5 +54,9 @@ public class CakesController {
                 request.getCakeId(),
                 request.getText()
         );
+    }
+    @PostMapping("/admin/upload-image")
+    public String uploadImage(@RequestParam("file") MultipartFile file) {
+        return cloudinaryService.uploadCakeImage(file);
     }
 }

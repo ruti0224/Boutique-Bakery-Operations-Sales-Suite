@@ -13,6 +13,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as OrdersRouteImport } from './routes/orders'
 import { Route as ForgetPasswordRouteImport } from './routes/forget-password'
+import { Route as ContactRouteImport } from './routes/contact'
 import { Route as CategoriesRouteImport } from './routes/categories'
 import { Route as CartRouteImport } from './routes/cart'
 import { Route as AdminRouteImport } from './routes/admin'
@@ -41,6 +42,11 @@ const OrdersRoute = OrdersRouteImport.update({
 const ForgetPasswordRoute = ForgetPasswordRouteImport.update({
   id: '/forget-password',
   path: '/forget-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContactRoute = ContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CategoriesRoute = CategoriesRouteImport.update({
@@ -94,6 +100,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRouteWithChildren
   '/cart': typeof CartRoute
   '/categories': typeof CategoriesRoute
+  '/contact': typeof ContactRoute
   '/forget-password': typeof ForgetPasswordRoute
   '/orders': typeof OrdersRoute
   '/profile': typeof ProfileRoute
@@ -108,6 +115,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/cart': typeof CartRoute
   '/categories': typeof CategoriesRoute
+  '/contact': typeof ContactRoute
   '/forget-password': typeof ForgetPasswordRoute
   '/orders': typeof OrdersRoute
   '/profile': typeof ProfileRoute
@@ -124,6 +132,7 @@ export interface FileRoutesById {
   '/admin': typeof AdminRouteWithChildren
   '/cart': typeof CartRoute
   '/categories': typeof CategoriesRoute
+  '/contact': typeof ContactRoute
   '/forget-password': typeof ForgetPasswordRoute
   '/orders': typeof OrdersRoute
   '/profile': typeof ProfileRoute
@@ -141,6 +150,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/cart'
     | '/categories'
+    | '/contact'
     | '/forget-password'
     | '/orders'
     | '/profile'
@@ -155,6 +165,7 @@ export interface FileRouteTypes {
     | '/'
     | '/cart'
     | '/categories'
+    | '/contact'
     | '/forget-password'
     | '/orders'
     | '/profile'
@@ -170,6 +181,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/cart'
     | '/categories'
+    | '/contact'
     | '/forget-password'
     | '/orders'
     | '/profile'
@@ -186,6 +198,7 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRouteWithChildren
   CartRoute: typeof CartRoute
   CategoriesRoute: typeof CategoriesRoute
+  ContactRoute: typeof ContactRoute
   ForgetPasswordRoute: typeof ForgetPasswordRoute
   OrdersRoute: typeof OrdersRoute
   ProfileRoute: typeof ProfileRoute
@@ -220,6 +233,13 @@ declare module '@tanstack/react-router' {
       path: '/forget-password'
       fullPath: '/forget-password'
       preLoaderRoute: typeof ForgetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/contact': {
+      id: '/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/categories': {
@@ -311,6 +331,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRouteWithChildren,
   CartRoute: CartRoute,
   CategoriesRoute: CategoriesRoute,
+  ContactRoute: ContactRoute,
   ForgetPasswordRoute: ForgetPasswordRoute,
   OrdersRoute: OrdersRoute,
   ProfileRoute: ProfileRoute,

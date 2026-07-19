@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static com.example.cakesmenagement.Entities.Orders.OrderStatus.PAID;
-import static com.example.cakesmenagement.Entities.Payments.PaymentStatus.SUCCESS;
 
 @Service
 @Transactional
@@ -28,8 +27,6 @@ public class AdminService {
     private CakesRepo cakesRepo;
     @Autowired
     private OrdersRepo orderRepo;
-    @Autowired
-    private PaymentsRepo paymentsRepo;
     @Autowired
     private CategoriesRepo categoryRepo;
     @Autowired
@@ -89,16 +86,6 @@ public class AdminService {
             System.out.println("No orders found for user code: " + userId);
         }
         return orders;
-    }
-    public double getRevenueReport(LocalDate start, LocalDate end) {
-        // 1. שליפת רשימת התשלומים מהרפוזיטורי
-        List<Payments> payments = paymentsRepo.findByPaymentDateBetween(start, end);
-        double total = payments.stream()
-                .filter(p -> SUCCESS==p.getPaymentStatus())
-                .mapToDouble(p -> p.getAmount())
-                .sum();
-
-        return total;
     }
     public void updateOrderStatus(int orderId, Orders.OrderStatus newStatus) {
         // 1. מציאת ההזמנה

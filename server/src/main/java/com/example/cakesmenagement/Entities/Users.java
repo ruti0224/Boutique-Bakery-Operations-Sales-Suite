@@ -32,6 +32,7 @@ public class Users {
     private String email;
     @Pattern(regexp = "^\\d{10}$", message = "מספר טלפון חייב להכיל 10 ספרות")
     private String phoneNumber;
+    @JsonIgnore
     @Size(min = 6, message = "סיסמה חייבת להכיל לפחות 6 תווים")
     private String password;
     private String role;
@@ -41,7 +42,9 @@ public class Users {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private List<Orders> userOrders;
+    @JsonIgnore
     private String resetToken;
+    @JsonIgnore
     private LocalDateTime resetTokenExpiry;
 
     public void setEmail(String email) {

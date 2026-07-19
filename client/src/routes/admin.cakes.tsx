@@ -38,7 +38,22 @@ function AdminCakes() {
   const [form, setForm] = useState<Partial<Cake>>(empty);
   const [detailsCake, setDetailsCake] = useState<Cake | null>(null);
   const editing = !!form.id && cakes.some((c) => c.id === form.id);
+  const [uploading, setUploading] = useState(false);
 
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const url = await cakeService.uploadImage(file);
+      setForm((prev) => ({ ...prev, imageUrl: url }));
+      toast.success("התמונה הועלתה בהצלחה");
+    } catch (err) {
+      toast.error(extractError(err, "שגיאה בהעלאת התמונה"));
+    } finally {
+      setUploading(false);
+    }
+  };
   const refresh = async () => {
     setLoading(true);
     try {
@@ -64,7 +79,7 @@ function AdminCakes() {
 
   const save = async () => {
     try {
-      if (editing && form.id) { await cakeService.update(form.id, form); toast.success("עודכן"); } 
+      if (editing && form.id) { await cakeService.update(form.id, form); toast.success("עודכן"); }
       else { await cakeService.add(form); toast.success("נוסף"); }
       setOpen(false); setForm(empty); refresh();
     } catch (e) { toast.error(extractError(e, "שגיאה")); }
@@ -79,7 +94,7 @@ function AdminCakes() {
 
   const confirmDelete = async () => {
     if (!delId) return;
-    try { await cakeService.remove(delId); toast.success("נמחק"); setDelId(null); refresh(); } 
+    try { await cakeService.remove(delId); toast.success("נמחק"); setDelId(null); refresh(); }
     catch (e) { toast.error(extractError(e)); }
   };
 
@@ -150,7 +165,7 @@ function AdminCakes() {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="flex items-center justify-between pt-2.5 border-t border-border/50 w-full" onClick={(e) => e.stopPropagation()}>
                   <div className="flex items-center gap-2">
                     <Switch checked={!!c.isActive} onCheckedChange={() => toggleActive(c)} className="scale-90" />
@@ -176,12 +191,19 @@ function AdminCakes() {
             <div className="space-y-1.5"><Label>תיאור</Label><Textarea value={form.description || ""} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
             <div className="space-y-1.5"><Label>מחיר</Label><Input type="number" value={form.price ?? 0} onChange={(e) => setForm({ ...form, price: +e.target.value })} /></div>
             <div className="space-y-1.5"><Label>מרכיבים</Label><Textarea value={form.ingredients ?? ""} onChange={(e) => setForm({ ...form, ingredients: e.target.value })} /></div>
-            <div className="space-y-1.5"><Label>קישור לתמונה</Label><Input value={form.imageUrl || ""} onChange={(e) => setForm({ ...form, imageUrl: e.target.value })} /></div>
+            <div className="space-y-1.5">
+              <Label>תמונת העוגה</Label>
+              {form.imageUrl && (
+                <img src={form.imageUrl} alt="תצוגה מקדימה" className="h-32 w-32 rounded-lg object-cover border border-border/50 mb-2" />
+              )}
+              <Input type="file" accept="image/png, image/jpeg, image/webp" onChange={handleFileSelect} disabled={uploading} />
+              {uploading && <p className="text-xs text-muted-foreground">מעלה תמונה...</p>}
+            </div>
             <div className="space-y-1.5">
               <Label>קטגוריה</Label>
               <Select value={form.category?.categoryCode ? String(form.category.categoryCode) : ""} onValueChange={(v) => {
-                  const cat = cats.find((c) => c.categoryCode === +v); setForm({ ...form, category: cat ?? null });
-                }}>
+                const cat = cats.find((c) => c.categoryCode === +v); setForm({ ...form, category: cat ?? null });
+              }}>
                 <SelectTrigger><SelectValue placeholder="בחר קטגוריה" /></SelectTrigger>
                 <SelectContent>{cats.map((c) => (<SelectItem key={c.categoryCode} value={String(c.categoryCode)}>{c.name}</SelectItem>))}</SelectContent>
               </Select>

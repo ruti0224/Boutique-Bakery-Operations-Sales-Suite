@@ -43,22 +43,20 @@ public class SecurityConfig {
                         // 2. נתיבים ציבוריים - קריאה בלבד (GET) של עוגות וקטגוריות
                         .requestMatchers(HttpMethod.GET, "/api/categories/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/cakes/**").permitAll()
-
+                        .requestMatchers(HttpMethod.POST, "/api/contact").permitAll()
                         // 3. נתיבי רישום והתחברות פתוחים לכל
                         .requestMatchers("/api/users/register", "/auth/**").permitAll()
 
-                        // 4. אבטחה גורפת לכל נתיבי הניהול (ADMIN)
-                        // הודות לכך שריכזת את כל ה-URLs תחת /api/admin/, שורה אחת זו מאבטחת את כולם בצורה הרמטית!
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
-
+                        .requestMatchers(
+                                "/api/cakes/admin/**",
+                                "/api/categories/admin/**",
+                                "/api/orders/admin/**",
+                                "/api/users/admin/**",
+                                "/api/payments/admin/**"
+                        ).hasRole("ADMIN")
                         // 5. פעולות המיועדות למשתמשים רשומים בלבד (USER / ADMIN)
                         .requestMatchers(HttpMethod.POST, "/api/cakes/recommend").hasRole("USER")
-                        .requestMatchers(
-                                "/api/users/**",
-                                "/api/orders/add"
-                        ).hasRole("USER")
-
-                        // 6. הגנה על כל שאר הבקשות במערכת
+                        .requestMatchers("/api/users/**", "/api/orders/add").hasRole("USER")
                         .anyRequest().authenticated()
                 )
                 // הוספת פילטר ה-JWT לפני מנגנון האימות הסטנדרטי של Spring

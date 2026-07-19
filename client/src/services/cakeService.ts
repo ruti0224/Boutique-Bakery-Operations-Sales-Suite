@@ -28,6 +28,13 @@ export const cakeService = {
     api.post<Cake>("/api/cakes/admin/add", toPayload(cake)).then((r) => normalize(r.data)),
   update: (id: number, cake: Partial<Cake>) =>
     api.put<Cake>(`/api/cakes/admin/update/${id}`, toPayload(cake)).then((r) => normalize(r.data)),
+  uploadImage: (file: File) => {
+  const formData = new FormData();
+  formData.append("file", file);
+  return api.post<string>("/api/cakes/admin/upload-image", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  }).then((r) => r.data);
+},
   remove: (id: number) => api.delete(`/api/cakes/admin/delete/${id}`).then((r) => r.data),
   recommend: (cakeId: number, text: string) =>
     api.post<string[]>("/api/cakes/recommend", { cakeId, text }).then((r) => r.data),

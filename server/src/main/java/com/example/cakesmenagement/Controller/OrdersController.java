@@ -27,11 +27,6 @@ public class OrdersController {
         return clientService.addOrder(order);
     }
 
-    @GetMapping("/{id}")
-    public Optional<Orders> getById(@PathVariable int id) {
-        return clientService.getOrdersById(id);
-    }
-
     @GetMapping("/admin/all")
     public List<Orders> getAllForAdmin() {
         return adminService.getAllOrders();

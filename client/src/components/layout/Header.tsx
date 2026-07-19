@@ -10,7 +10,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { LayoutGrid, LogOut, Package, ShoppingBag, User as UserIcon } from "lucide-react";
+import {
+  LayoutGrid,
+  LogOut,
+  Package,
+  ShoppingBag,
+  User as UserIcon,
+  MessageCircle,
+} from "lucide-react";
 import logo from "@/assets/logo.png";
 
 export function Header() {
@@ -25,71 +32,69 @@ export function Header() {
         {/* Profile and Links Menu */}
         <div className="flex items-center gap-4 order-1">
           {isAuthenticated ? (
-            <>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className="rounded-full ring-2 ring-transparent hover:ring-gold transition">
-                    <Avatar className="h-10 w-10 border border-gold/40">
-                      <AvatarFallback className="bg-gradient-to-br from-amber-100 to-amber-300 text-espresso font-bold">
-                        {initial}
-                      </AvatarFallback>
-                    </Avatar>
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-56">
-                  <DropdownMenuLabel className="truncate">{email ?? "משתמש"}</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onSelect={() => navigate({ to: "/profile" })}>
-                    <UserIcon className="ml-2 h-4 w-4" /> עדכון פרופיל
-                  </DropdownMenuItem>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="rounded-full ring-2 ring-transparent hover:ring-gold transition">
+                  <Avatar className="h-10 w-10 border border-gold/40">
+                    <AvatarFallback className="bg-gradient-to-br from-amber-100 to-amber-300 text-espresso font-bold">
+                      {initial}
+                    </AvatarFallback>
+                  </Avatar>
+                </button>
+              </DropdownMenuTrigger>
 
-                  {/* חדש: מופיע רק בנייד, כי בדסקטופ יש כפתורים בשורת הניווט */}
-                  <DropdownMenuItem onSelect={() => navigate({ to: "/cart" })} className="sm:hidden">
-                    <ShoppingBag className="ml-2 h-4 w-4" /> הסל שלי
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onSelect={() => navigate({ to: "/orders" })} className="sm:hidden">
-                    <Package className="ml-2 h-4 w-4" /> ההזמנות שלי
-                  </DropdownMenuItem>
-                  {isAdmin && (
-                    <DropdownMenuItem onSelect={() => navigate({ to: "/admin" })} className="sm:hidden">
-                      <LayoutGrid className="ml-2 h-4 w-4" /> פאנל ניהול
-                    </DropdownMenuItem>
-                  )}
+              <DropdownMenuContent align="start" className="w-56">
+                <DropdownMenuLabel className="truncate">
+                  {email ?? "משתמש"}
+                </DropdownMenuLabel>
 
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onSelect={logout} className="text-destructive">
-                    <LogOut className="ml-2 h-4 w-4" /> התנתקות
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+                <DropdownMenuSeparator />
 
-              {/* Navigation Links inside Header bar */}
-              <div className="hidden sm:flex items-center gap-1">
+                <DropdownMenuItem
+                  onSelect={() => navigate({ to: "/profile" })}
+                >
+                  <UserIcon className="ml-2 h-4 w-4" />
+                  עדכון פרופיל
+                </DropdownMenuItem>
+
+                {/* מופיע רק בנייד */}
+                <DropdownMenuItem
+                  onSelect={() => navigate({ to: "/cart" })}
+                  className="sm:hidden"
+                >
+                  <ShoppingBag className="ml-2 h-4 w-4" />
+                  הסל שלי
+                </DropdownMenuItem>
+
+                <DropdownMenuItem
+                  onSelect={() => navigate({ to: "/orders" })}
+                  className="sm:hidden"
+                >
+                  <Package className="ml-2 h-4 w-4" />
+                  ההזמנות שלי
+                </DropdownMenuItem>
+
                 {isAdmin && (
-                  <Button
-                    variant="ghost"
-                    onClick={() => navigate({ to: "/admin" })}
-                    className="text-espresso hover:text-gold hover:bg-gold/10 font-semibold"
+                  <DropdownMenuItem
+                    onSelect={() => navigate({ to: "/admin" })}
+                    className="sm:hidden"
                   >
-                    <LayoutGrid className="ml-2 h-4 w-4" /> פאנל ניהול
-                  </Button>
+                    <LayoutGrid className="ml-2 h-4 w-4" />
+                    פאנל ניהול
+                  </DropdownMenuItem>
                 )}
-                <Button
-                  variant="ghost"
-                  onClick={() => navigate({ to: "/cart" })}
-                  className="text-espresso hover:text-gold hover:bg-gold/10"
+
+                <DropdownMenuSeparator />
+
+                <DropdownMenuItem
+                  onSelect={logout}
+                  className="text-destructive"
                 >
-                  <ShoppingBag className="ml-2 h-4 w-4" /> הסל שלי
-                </Button>
-                <Button
-                  variant="ghost"
-                  onClick={() => navigate({ to: "/orders" })}
-                  className="text-espresso hover:text-gold hover:bg-gold/10"
-                >
-                  <Package className="ml-2 h-4 w-4" /> ההזמנות שלי
-                </Button>
-              </div>
-            </>
+                  <LogOut className="ml-2 h-4 w-4" />
+                  התנתקות
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           ) : (
             <button
               onClick={openAuth}
@@ -103,10 +108,59 @@ export function Header() {
               </Avatar>
             </button>
           )}
+
+          {/* צור קשר - תמיד מופיע וצמוד לפרופיל */}
+          <Button
+            asChild
+            variant="ghost"
+            className="text-espresso hover:text-gold hover:bg-gold/10"
+          >
+            <Link to="/contact">
+              <MessageCircle className="ml-2 h-4 w-4" />
+              צור קשר
+            </Link>
+          </Button>
+
+          {/* שאר האפשרויות רק למשתמש מחובר */}
+          {isAuthenticated && (
+            <div className="hidden sm:flex items-center gap-1">
+              {isAdmin && (
+                <Button
+                  variant="ghost"
+                  onClick={() => navigate({ to: "/admin" })}
+                  className="text-espresso hover:text-gold hover:bg-gold/10 font-semibold"
+                >
+                  <LayoutGrid className="ml-2 h-4 w-4" />
+                  פאנל ניהול
+                </Button>
+              )}
+
+              <Button
+                variant="ghost"
+                onClick={() => navigate({ to: "/cart" })}
+                className="text-espresso hover:text-gold hover:bg-gold/10"
+              >
+                <ShoppingBag className="ml-2 h-4 w-4" />
+                הסל שלי
+              </Button>
+
+              <Button
+                variant="ghost"
+                onClick={() => navigate({ to: "/orders" })}
+                className="text-espresso hover:text-gold hover:bg-gold/10"
+              >
+                <Package className="ml-2 h-4 w-4" />
+                ההזמנות שלי
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* Brand */}
-        <Link to="/" className="order-2 absolute left-1/2 -translate-x-1/2 flex items-center gap-2">
+        <Link
+          to="/"
+          className="order-2 absolute left-1/2 -translate-x-1/2 flex items-center gap-2"
+        >
           <img
             src={logo}
             alt="לוגו Sweets"
