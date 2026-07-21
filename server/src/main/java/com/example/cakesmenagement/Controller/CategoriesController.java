@@ -14,6 +14,7 @@ import java.util.List;
 
 @RestController // מגדיר את המחלקה כקונטרולר
 @RequestMapping("/api/categories") // הכתובת הבסיסית של כל הפעולות כאן
+@CrossOrigin(origins = "https://sweetsbyefrat.com")
 public class CategoriesController {
     @Autowired
     private AdminService adminService;
