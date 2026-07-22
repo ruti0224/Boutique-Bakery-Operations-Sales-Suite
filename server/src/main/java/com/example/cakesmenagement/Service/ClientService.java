@@ -208,20 +208,41 @@ public class ClientService {
         return cake.getRecommendation();
     }
 
-    public void generateResetToken(String email) {
+public void generateResetToken(String email) {
         usersRepo.findByEmailIgnoreCase(email).ifPresent(user -> {
+            String token;
+
+            // בדיקה אם יש כבר טוקן קיים ופעיל (טרם עברו 15 דקות)
             if (user.getResetToken() != null && user.getResetTokenExpiry() != null
                     && user.getResetTokenExpiry().isAfter(LocalDateTime.now())) {
-                return; // כבר נשלח קישור, לא שולחים שוב, אבל גם לא מגלים ללקוח
+                token = user.getResetToken(); // שימוש בטוקן הקיים
+            } else {
+                // יצירת טוקן חדש אם אין או שפג תוקפו
+                token = UUID.randomUUID().toString();
+                user.setResetToken(token);
+                user.setResetTokenExpiry(LocalDateTime.now().plusMinutes(15));
+                usersRepo.save(user);
             }
-            String token = UUID.randomUUID().toString();
-            user.setResetToken(token);
-            user.setResetTokenExpiry(LocalDateTime.now().plusMinutes(15));
-            usersRepo.save(user);
+
+            // יצירת הקישור ושליחת המייל (תתבצע בכל מקרה למייל שנמצא)
             String resetLink = frontendUrl + "/reset-password?token=" + token;
             emailService.sendEmail(email, "איפוס סיסמה — Sweets", emailService.buildResetPasswordEmail(resetLink));
         });
     }
+    // public void generateResetToken(String email) {
+    //     usersRepo.findByEmailIgnoreCase(email).ifPresent(user -> {
+    //         if (user.getResetToken() != null && user.getResetTokenExpiry() != null
+    //                 && user.getResetTokenExpiry().isAfter(LocalDateTime.now())) {
+    //             return; // כבר נשלח קישור, לא שולחים שוב, אבל גם לא מגלים ללקוח
+    //         }
+    //         String token = UUID.randomUUID().toString();
+    //         user.setResetToken(token);
+    //         user.setResetTokenExpiry(LocalDateTime.now().plusMinutes(15));
+    //         usersRepo.save(user);
+    //         String resetLink = frontendUrl + "/reset-password?token=" + token;
+    //         emailService.sendEmail(email, "איפוס סיסמה — Sweets", emailService.buildResetPasswordEmail(resetLink));
+    //     });
+    // }
     public void resetPassword(String token, String newPassword) {
         // 1. מחפשים משתמש שיש לו בדיוק את הטוקן הזה
         Users user = usersRepo.findByResetToken(token)
